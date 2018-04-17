@@ -23,8 +23,6 @@ URL_PREFIX=
 # served using HTTP.
 TLS_CERT=
 TLS_KEY=
-# Hide Listing (Only available when URL_PREFIX is set)
-SHOW_LISTING=
 ```
 
 ### Without Docker
