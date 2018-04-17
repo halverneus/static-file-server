@@ -10,6 +10,9 @@ Environment variables with defaults:
 HOST=
 # If assigned, must be a valid port number.
 PORT=8080
+# Automatically serve the index file for a given directory (default). If set to
+# 'false', URLs ending with a '/' will return 'NOT FOUND'.
+SHOW_LISTING=true
 # Folder with the content to serve.
 FOLDER=/web
 # URL path prefix. If 'my.file' is in the root of $FOLDER and $URL_PREFIX is
