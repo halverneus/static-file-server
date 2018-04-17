@@ -50,7 +50,9 @@ ENVIRONMENT VARIABLES
     URL_PREFIX
         The prefix to use in the URL path. If supplied, then the prefix must
         start with a forward-slash and NOT end with a forward-slash. If not
-        supplied then no prefix is used.
+		supplied then no prefix is used.
+	SHOW_LISTING
+		This will allow you to hide the file inside the directory
 
 USAGE
     FILE LAYOUT
@@ -71,7 +73,8 @@ USAGE
         export FOLDER=/var/www/sub
         export HOST=my.machine
         export PORT=80
-        export URL_PREFIX=/my/stuff
+		export URL_PREFIX=/my/stuff
+		export SHOW_LISTING=true
         static-file-server
             Retrieve with: wget http://my.machine/my/stuff/my.file
 
@@ -113,6 +116,7 @@ func main() {
 	tlsCert := env("TLS_CERT", "")
 	tlsKey := env("TLS_KEY", "")
 	urlPrefix := env("URL_PREFIX", "")
+	showListing := env("SHOW_LISTING", "true")
 
 	// If HTTPS is to be used, verify both TLS_* environment variables are set.
 	if 0 < len(tlsCert) || 0 < len(tlsKey) {
@@ -139,7 +143,11 @@ func main() {
 	if 0 == len(urlPrefix) {
 		handler = basicHandler(folder)
 	} else {
-		handler = prefixHandler(folder, urlPrefix)
+		if showListing == "false" {
+			handler = prefixHandlerWithoutListingFilesInDirectory(folder, urlPrefix)
+		} else {
+			handler = prefixHandler(folder, urlPrefix)
+		}
 	}
 	http.HandleFunc("/", handler)
 
@@ -160,12 +168,31 @@ func basicHandler(folder string) http.HandlerFunc {
 
 // prefixHandler removes the URL path prefix before serving files from the
 // folder passed.
+func prefixHandlerWithoutListingFilesInDirectory(folder, urlPrefix string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, urlPrefix) {
+			http.NotFound(w, r)
+			return
+		}
+		// dont list file in directory
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.ServeFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
+	}
+}
+
+// prefixHandler removes the URL path prefix before serving files from the
+// folder passed.
 func prefixHandler(folder, urlPrefix string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, urlPrefix) {
 			http.NotFound(w, r)
 			return
 		}
+
 		http.ServeFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
 	}
 }
