@@ -39,6 +39,12 @@ ENVIRONMENT VARIABLES
         to a client without regard for the hostname.
     PORT
         The port used for binding. If not supplied, defaults to port '8080'.
+    SHOW_LISTING
+        Automatically serve the index file for the directory if requested. For
+        example, if the client requests 'http://127.0.0.1/' the 'index.html'
+        file in the root of the directory being served is returned. If the value
+        is set to 'false', the same request will return a 'NOT FOUND'. Default
+        value is 'true'.
     TLS_CERT
         Path to the TLS certificate file to serve files using HTTPS. If supplied
         then TLS_KEY must also be supplied. If not supplied, contents will be
@@ -50,13 +56,12 @@ ENVIRONMENT VARIABLES
     URL_PREFIX
         The prefix to use in the URL path. If supplied, then the prefix must
         start with a forward-slash and NOT end with a forward-slash. If not
-		supplied then no prefix is used.
-	SHOW_LISTING
-		This will allow you to hide the file inside the directory
+        supplied then no prefix is used.
 
 USAGE
     FILE LAYOUT
        /var/www/sub/my.file
+       /var/www/index.html
 
     COMMAND
         export FOLDER=/var/www/sub
@@ -73,8 +78,7 @@ USAGE
         export FOLDER=/var/www/sub
         export HOST=my.machine
         export PORT=80
-		export URL_PREFIX=/my/stuff
-		export SHOW_LISTING=true
+        export URL_PREFIX=/my/stuff
         static-file-server
             Retrieve with: wget http://my.machine/my/stuff/my.file
 
@@ -90,6 +94,18 @@ USAGE
         export TLS_KEY=/etc/server/my.machine.key
         static-file-server
             Retrieve with: wget https://my.machine/my.file
+
+        export FOLDER=/var/www
+        export PORT=80
+        export SHOW_LISTING=true  # Default behavior
+        static-file-server
+            Retrieve 'index.html' with: wget http://my.machine/
+
+        export FOLDER=/var/www
+        export PORT=80
+        export SHOW_LISTING=false
+        static-file-server
+            Returns 'NOT FOUND': wget http://my.machine/
 `
 )
 
@@ -113,10 +129,10 @@ func main() {
 	folder := env("FOLDER", "/web") + "/"
 	host := env("HOST", "")
 	port := env("PORT", "8080")
+	showListing := envAsBool("SHOW_LISTING", true)
 	tlsCert := env("TLS_CERT", "")
 	tlsKey := env("TLS_KEY", "")
 	urlPrefix := env("URL_PREFIX", "")
-	showListing := env("SHOW_LISTING", "true")
 
 	// If HTTPS is to be used, verify both TLS_* environment variables are set.
 	if 0 < len(tlsCert) || 0 < len(tlsKey) {
@@ -141,13 +157,9 @@ func main() {
 	// Choose and set the appropriate, optimized static file serving function.
 	var handler http.HandlerFunc
 	if 0 == len(urlPrefix) {
-		handler = basicHandler(folder)
+		handler = handleListing(showListing, basicHandler(folder))
 	} else {
-		if showListing == "false" {
-			handler = prefixHandlerWithoutListingFilesInDirectory(folder, urlPrefix)
-		} else {
-			handler = prefixHandler(folder, urlPrefix)
-		}
+		handler = handleListing(showListing, prefixHandler(folder, urlPrefix))
 	}
 	http.HandleFunc("/", handler)
 
@@ -156,6 +168,19 @@ func main() {
 		log.Fatalln(http.ListenAndServe(host+":"+port, nil))
 	} else {
 		log.Fatalln(http.ListenAndServeTLS(host+":"+port, tlsCert, tlsKey, nil))
+	}
+}
+
+// handleListing wraps an HTTP request. In the event of a folder root request,
+// setting 'show' to false will automatically return 'NOT FOUND' whereas true
+// will attempt to retrieve the index file of that directory.
+func handleListing(show bool, serve http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if show || strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+		serve(w, r)
 	}
 }
 
@@ -168,31 +193,12 @@ func basicHandler(folder string) http.HandlerFunc {
 
 // prefixHandler removes the URL path prefix before serving files from the
 // folder passed.
-func prefixHandlerWithoutListingFilesInDirectory(folder, urlPrefix string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.URL.Path, urlPrefix) {
-			http.NotFound(w, r)
-			return
-		}
-		// dont list file in directory
-		if strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-
-		http.ServeFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
-	}
-}
-
-// prefixHandler removes the URL path prefix before serving files from the
-// folder passed.
 func prefixHandler(folder, urlPrefix string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, urlPrefix) {
 			http.NotFound(w, r)
 			return
 		}
-
 		http.ServeFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
 	}
 }
@@ -204,4 +210,36 @@ func env(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// strAsBool converts the intent of the passed value into a boolean
+// representation.
+func strAsBool(value string) (result bool, err error) {
+	lvalue := strings.ToLower(value)
+	switch lvalue {
+	case "0", "false", "f", "no", "n":
+		result = false
+	case "1", "true", "t", "yes", "y":
+		result = true
+	default:
+		result = false
+		msg := "Unknown conversion from string to bool for value '%s'"
+		err = fmt.Errorf(msg, value)
+	}
+	return
+}
+
+// envAsBool returns the value for an environment variable or, if not set, a
+// fallback value as a boolean.
+func envAsBool(key string, fallback bool) bool {
+	value := env(key, fmt.Sprintf("%t", fallback))
+	result, err := strAsBool(value)
+	if nil != err {
+		log.Printf(
+			"Invalid value for '%s': %v\nUsing fallback: %t",
+			key, err, fallback,
+		)
+		return fallback
+	}
+	return result
 }
