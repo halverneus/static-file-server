@@ -176,7 +176,7 @@ func main() {
 // will attempt to retrieve the index file of that directory.
 func handleListing(show bool, serve http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if show || strings.HasSuffix(r.URL.Path, "/") {
+		if !show && strings.HasSuffix(r.URL.Path, "/") {
 			http.NotFound(w, r)
 			return
 		}
