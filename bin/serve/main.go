@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/halverneus/static-file-server/config"
 )
 
 var (
-	version = "Version 1.1"
+	version = "Version 1.3"
 
 	help = `
 NAME
@@ -126,17 +128,13 @@ func main() {
 	}
 
 	// Collect environment variables.
-	folder := env("FOLDER", "/web") + "/"
-	host := env("HOST", "")
-	port := env("PORT", "8080")
-	showListing := envAsBool("SHOW_LISTING", true)
-	tlsCert := env("TLS_CERT", "")
-	tlsKey := env("TLS_KEY", "")
-	urlPrefix := env("URL_PREFIX", "")
+	if err := config.Load(""); nil != err {
+		log.Fatalf("While loading configuration got %v", err)
+	}
 
 	// If HTTPS is to be used, verify both TLS_* environment variables are set.
-	if 0 < len(tlsCert) || 0 < len(tlsKey) {
-		if 0 == len(tlsCert) || 0 == len(tlsKey) {
+	if 0 < len(config.Get.TLSCert) || 0 < len(config.Get.TLSKey) {
+		if 0 == len(config.Get.TLSCert) || 0 == len(config.Get.TLSKey) {
 			log.Fatalln(
 				"If value for environment variable 'TLS_CERT' or 'TLS_KEY' is set " +
 					"then value for environment variable 'TLS_KEY' or 'TLS_CERT' must " +
@@ -146,8 +144,8 @@ func main() {
 	}
 
 	// If the URL path prefix is to be used, verify it is properly formatted.
-	if 0 < len(urlPrefix) &&
-		(!strings.HasPrefix(urlPrefix, "/") || strings.HasSuffix(urlPrefix, "/")) {
+	if 0 < len(config.Get.URLPrefix) &&
+		(!strings.HasPrefix(config.Get.URLPrefix, "/") || strings.HasSuffix(config.Get.URLPrefix, "/")) {
 		log.Fatalln(
 			"Value for environment variable 'URL_PREFIX' must start " +
 				"with '/' and not end with '/'. Example: '/my/prefix'",
@@ -156,18 +154,24 @@ func main() {
 
 	// Choose and set the appropriate, optimized static file serving function.
 	var handler http.HandlerFunc
-	if 0 == len(urlPrefix) {
-		handler = handleListing(showListing, basicHandler(folder))
+	if 0 == len(config.Get.URLPrefix) {
+		handler = handleListing(config.Get.ShowListing, basicHandler(config.Get.Folder))
 	} else {
-		handler = handleListing(showListing, prefixHandler(folder, urlPrefix))
+		handler = handleListing(config.Get.ShowListing, prefixHandler(config.Get.Folder, config.Get.URLPrefix))
 	}
 	http.HandleFunc("/", handler)
 
 	// Serve files over HTTP or HTTPS based on paths to TLS files being provided.
-	if 0 == len(tlsCert) {
-		log.Fatalln(http.ListenAndServe(host+":"+port, nil))
+	binding := fmt.Sprintf("%s:%d", config.Get.Host, config.Get.Port)
+	if 0 == len(config.Get.TLSCert) {
+		log.Fatalln(http.ListenAndServe(binding, nil))
 	} else {
-		log.Fatalln(http.ListenAndServeTLS(host+":"+port, tlsCert, tlsKey, nil))
+		log.Fatalln(http.ListenAndServeTLS(
+			binding,
+			config.Get.TLSCert,
+			config.Get.TLSKey,
+			nil,
+		))
 	}
 }
 
