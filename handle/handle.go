@@ -5,6 +5,20 @@ import (
 	"strings"
 )
 
+var (
+	// These assignments are for unit testing.
+	listenAndServe    = http.ListenAndServe
+	listenAndServeTLS = http.ListenAndServeTLS
+	setHandler        = http.HandleFunc
+)
+
+var (
+	server http.Server
+)
+
+// ListenerFunc accepts the {hostname:port} binding string required by HTTP
+// listeners and the handler (router) function and returns any errors that
+// occur.
 type ListenerFunc func(string, http.HandlerFunc) error
 
 // Basic file handler servers files from the passed folder.
@@ -43,15 +57,15 @@ func IgnoreIndex(serve http.HandlerFunc) http.HandlerFunc {
 // Listening function for serving the handler function.
 func Listening() ListenerFunc {
 	return func(binding string, handler http.HandlerFunc) error {
-		http.HandleFunc("/", handler)
-		return http.ListenAndServe(binding, nil)
+		setHandler("/", handler)
+		return listenAndServe(binding, nil)
 	}
 }
 
 // TLSListening function for serving the handler function with encryption.
 func TLSListening(tlsCert, tlsKey string) ListenerFunc {
 	return func(binding string, handler http.HandlerFunc) error {
-		http.HandleFunc("/", handler)
-		return http.ListenAndServeTLS(binding, tlsCert, tlsKey, nil)
+		setHandler("/", handler)
+		return listenAndServeTLS(binding, tlsCert, tlsKey, nil)
 	}
 }
