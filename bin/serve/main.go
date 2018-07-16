@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/halverneus/static-file-server/config"
+	"github.com/halverneus/static-file-server/handle"
 )
 
 var (
@@ -155,95 +156,27 @@ func main() {
 	// Choose and set the appropriate, optimized static file serving function.
 	var handler http.HandlerFunc
 	if 0 == len(config.Get.URLPrefix) {
-		handler = handleListing(config.Get.ShowListing, basicHandler(config.Get.Folder))
+		handler = handle.Basic(config.Get.Folder)
 	} else {
-		handler = handleListing(config.Get.ShowListing, prefixHandler(config.Get.Folder, config.Get.URLPrefix))
+		handler = handle.Prefix(config.Get.Folder, config.Get.URLPrefix)
 	}
-	http.HandleFunc("/", handler)
+
+	// Determine whether index files should hidden.
+	if !config.Get.ShowListing {
+		handler = handle.IgnoreIndex(handler)
+	}
 
 	// Serve files over HTTP or HTTPS based on paths to TLS files being provided.
-	binding := fmt.Sprintf("%s:%d", config.Get.Host, config.Get.Port)
-	if 0 == len(config.Get.TLSCert) {
-		log.Fatalln(http.ListenAndServe(binding, nil))
-	} else {
-		log.Fatalln(http.ListenAndServeTLS(
-			binding,
+	var listener handle.ListenerFunc
+	if 0 < len(config.Get.TLSCert) {
+		listener = handle.TLSListening(
 			config.Get.TLSCert,
 			config.Get.TLSKey,
-			nil,
-		))
-	}
-}
-
-// handleListing wraps an HTTP request. In the event of a folder root request,
-// setting 'show' to false will automatically return 'NOT FOUND' whereas true
-// will attempt to retrieve the index file of that directory.
-func handleListing(show bool, serve http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !show && strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-		serve(w, r)
-	}
-}
-
-// basicHandler serves files from the folder passed.
-func basicHandler(folder string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, folder+r.URL.Path)
-	}
-}
-
-// prefixHandler removes the URL path prefix before serving files from the
-// folder passed.
-func prefixHandler(folder, urlPrefix string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.URL.Path, urlPrefix) {
-			http.NotFound(w, r)
-			return
-		}
-		http.ServeFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
-	}
-}
-
-// env returns the value for an environment variable or, if not set, a fallback
-// value.
-func env(key, fallback string) string {
-	if value := os.Getenv(key); 0 < len(value) {
-		return value
-	}
-	return fallback
-}
-
-// strAsBool converts the intent of the passed value into a boolean
-// representation.
-func strAsBool(value string) (result bool, err error) {
-	lvalue := strings.ToLower(value)
-	switch lvalue {
-	case "0", "false", "f", "no", "n":
-		result = false
-	case "1", "true", "t", "yes", "y":
-		result = true
-	default:
-		result = false
-		msg := "Unknown conversion from string to bool for value '%s'"
-		err = fmt.Errorf(msg, value)
-	}
-	return
-}
-
-// envAsBool returns the value for an environment variable or, if not set, a
-// fallback value as a boolean.
-func envAsBool(key string, fallback bool) bool {
-	value := env(key, fmt.Sprintf("%t", fallback))
-	result, err := strAsBool(value)
-	if nil != err {
-		log.Printf(
-			"Invalid value for '%s': %v\nUsing fallback: %t",
-			key, err, fallback,
 		)
-		return fallback
+	} else {
+		listener = handle.Listening()
 	}
-	return result
+
+	binding := fmt.Sprintf("%s:%d", config.Get.Host, config.Get.Port)
+	log.Fatalln(listener(binding, handler))
 }
