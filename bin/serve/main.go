@@ -133,26 +133,6 @@ func main() {
 		log.Fatalf("While loading configuration got %v", err)
 	}
 
-	// If HTTPS is to be used, verify both TLS_* environment variables are set.
-	if 0 < len(config.Get.TLSCert) || 0 < len(config.Get.TLSKey) {
-		if 0 == len(config.Get.TLSCert) || 0 == len(config.Get.TLSKey) {
-			log.Fatalln(
-				"If value for environment variable 'TLS_CERT' or 'TLS_KEY' is set " +
-					"then value for environment variable 'TLS_KEY' or 'TLS_CERT' must " +
-					"also be set.",
-			)
-		}
-	}
-
-	// If the URL path prefix is to be used, verify it is properly formatted.
-	if 0 < len(config.Get.URLPrefix) &&
-		(!strings.HasPrefix(config.Get.URLPrefix, "/") || strings.HasSuffix(config.Get.URLPrefix, "/")) {
-		log.Fatalln(
-			"Value for environment variable 'URL_PREFIX' must start " +
-				"with '/' and not end with '/'. Example: '/my/prefix'",
-		)
-	}
-
 	// Choose and set the appropriate, optimized static file serving function.
 	var handler http.HandlerFunc
 	if 0 == len(config.Get.URLPrefix) {
