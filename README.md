@@ -47,9 +47,9 @@ PORT=8888 FOLDER=. ./serve
 Files can then be accessed by going to http://localhost:8888/my/file.txt
 
 ### With Docker
-```
-docker run -d -v /my/folder:/web -p 8080:8080 halverneus/static-file-server:latest
 ```bash
+docker run -d -v /my/folder:/web -p 8080:8080 halverneus/static-file-server:latest
+```
 This will serve the folder "/my/folder" over http://localhost:8080/my/file.txt
 
 Any of the variables can also be modified:
