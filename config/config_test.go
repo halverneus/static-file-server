@@ -135,6 +135,51 @@ func TestOverrideWithEnvvars(t *testing.T) {
 	equalStrings(t, phase, urlPrefixKey, testURLPrefix, Get.URLPrefix)
 }
 
+func TestValidate(t *testing.T) {
+	validPath := "config.go"
+	invalidPath := "should/never/exist.txt"
+	empty := ""
+	prefix := "/my/prefix"
+
+	testCases := []struct {
+		name    string
+		cert    string
+		key     string
+		prefix  string
+		isError bool
+	}{
+		{"Valid paths w/prefix", validPath, validPath, prefix, false},
+		{"Valid paths wo/prefix", validPath, validPath, empty, false},
+		{"Empty paths w/prefix", empty, empty, prefix, false},
+		{"Empty paths wo/prefix", empty, empty, empty, false},
+		{"Mixed paths w/prefix", empty, validPath, prefix, true},
+		{"Alt mixed paths w/prefix", validPath, empty, prefix, true},
+		{"Mixed paths wo/prefix", empty, validPath, empty, true},
+		{"Alt mixed paths wo/prefix", validPath, empty, empty, true},
+		{"Invalid cert w/prefix", invalidPath, validPath, prefix, true},
+		{"Invalid key w/prefix", validPath, invalidPath, prefix, true},
+		{"Invalid cert & key w/prefix", invalidPath, invalidPath, prefix, true},
+		{"Prefix missing leading /", empty, empty, "my/prefix", true},
+		{"Prefix with trailing /", empty, empty, "/my/prefix/", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			Get.TLSCert = tc.cert
+			Get.TLSKey = tc.key
+			Get.URLPrefix = tc.prefix
+			err := validate()
+			hasError := nil != err
+			if hasError && !tc.isError {
+				t.Errorf("Expected no error but got %v", err)
+			}
+			if !hasError && tc.isError {
+				t.Error("Expected an error but got no error")
+			}
+		})
+	}
+}
+
 func TestEnvAsStr(t *testing.T) {
 	sv := "STRING_VALUE"
 	fv := "FLOAT_VALUE"

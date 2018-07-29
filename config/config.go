@@ -77,8 +77,9 @@ func Load(filename string) (err error) {
 	if err = yaml.Unmarshal(contents, &Get); nil != err {
 		return
 	}
+
 	overrideWithEnvVars()
-	return
+	return validate()
 }
 
 // overrideWithEnvVars the default values and the configuration file values.
@@ -91,6 +92,38 @@ func overrideWithEnvVars() {
 	Get.TLSCert = envAsStr(tlsCertKey, Get.TLSCert)
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
+}
+
+// validate the configuration.
+func validate() error {
+	// If HTTPS is to be used, verify both TLS_* environment variables are set.
+	if 0 < len(Get.TLSCert) || 0 < len(Get.TLSKey) {
+		if 0 == len(Get.TLSCert) || 0 == len(Get.TLSKey) {
+			msg := "if value for either 'TLS_CERT' or 'TLS_KEY' is set then " +
+				"then value for the other must also be set (values are " +
+				"currently '%s' and '%s', respectively)"
+			return fmt.Errorf(msg, Get.TLSCert, Get.TLSKey)
+		}
+		if _, err := os.Stat(Get.TLSCert); nil != err {
+			msg := "value of TLS_CERT is set with filename '%s' that returns %v"
+			return fmt.Errorf(msg, err)
+		}
+		if _, err := os.Stat(Get.TLSKey); nil != err {
+			msg := "value of TLS_KEY is set with filename '%s' that returns %v"
+			return fmt.Errorf(msg, err)
+		}
+	}
+
+	// If the URL path prefix is to be used, verify it is properly formatted.
+	if 0 < len(Get.URLPrefix) &&
+		(!strings.HasPrefix(Get.URLPrefix, "/") || strings.HasSuffix(Get.URLPrefix, "/")) {
+		msg := "if value for 'URL_PREFIX' is set then the value must start " +
+			"with '/' and not end with '/' (current value of '%s' vs valid " +
+			"example of '/my/prefix'"
+		return fmt.Errorf(msg, Get.URLPrefix)
+	}
+
+	return nil
 }
 
 // envAsStr returns the value of the environment variable as a string if set.
