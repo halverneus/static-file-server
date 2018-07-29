@@ -18,6 +18,7 @@ NAME
 
 SYNOPSIS
     static-file-server
+    static-file-server [ -c | -config | --config ] /path/to/config.yml
     static-file-server [ help | -help | --help ]
     static-file-server [ version | -version | --version ]
 
@@ -59,6 +60,24 @@ ENVIRONMENT VARIABLES
         start with a forward-slash and NOT end with a forward-slash. If not
         supplied then no prefix is used.
 
+CONFIGURATION FILE
+    Configuration can also managed used a YAML configuration file. To select the
+    configuration values using the YAML file, pass in the path to the file using
+    the appropriate flags (-c, --config). Environment variables take priority
+    over the configuration file. The following is an example configuration using
+    the default values.
+
+    Example config.yml with defaults:
+    ----------------------------------------------------------------------------
+    folder: /web
+    host: ""
+    port: 8080
+    show-listing: true
+    tls-cert: ""
+    tls-key: ""
+    url-prefix: ""
+    ----------------------------------------------------------------------------
+
 USAGE
     FILE LAYOUT
        /var/www/sub/my.file
@@ -75,6 +94,11 @@ USAGE
         export PORT=80
         static-file-server
             Retrieve with: wget http://my.machine/sub/my.file
+        
+        export FOLDER=/var/www
+        static-file-server -c config.yml
+            Result: Runs with values from config.yml, but with the folder being
+                    served overridden by the FOLDER environment variable.
 
         export FOLDER=/var/www/sub
         export HOST=my.machine
