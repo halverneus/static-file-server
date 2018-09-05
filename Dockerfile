@@ -1,8 +1,8 @@
-FROM golang:1.10.3 as builder
+FROM golang:1.11.0 as builder
 
 ENV BUILD_DIR /go/src/github.com/halverneus/static-file-server
 ENV MAIN github.com/halverneus/static-file-server/bin/serve
-ENV DEP_VERSION v0.4.1
+ENV DEP_VERSION v0.5.0
 
 RUN curl -fsSL -o /usr/local/bin/dep \
     https://github.com/golang/dep/releases/download/$DEP_VERSION/dep-linux-amd64 && \
