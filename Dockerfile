@@ -1,5 +1,7 @@
 FROM golang:1.11.0 as builder
 
+EXPOSE 8080
+
 ENV BUILD_DIR /go/src/github.com/halverneus/static-file-server
 ENV MAIN github.com/halverneus/static-file-server/bin/serve
 ENV DEP_VERSION v0.5.0
