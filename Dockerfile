@@ -1,4 +1,4 @@
-FROM golang:1.11.0 as builder
+FROM golang:1.11.1 as builder
 
 EXPOSE 8080
 
