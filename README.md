@@ -8,6 +8,9 @@ Available on GitHub at https://github.com/halverneus/static-file-server
 Environment variables with defaults:
 
 ```bash
+# Enable debugging for troubleshooting. If set to 'true' this prints extra
+# information during execution. Default value is 'false'.
+DEBUG=false
 # Optional Hostname for binding. Leave black to accept any incoming HTTP request
 # on the prescribed port.
 HOST=
@@ -34,6 +37,7 @@ configuration file with defaults. Pass in the path to the configuration file
 using the command line option ('-c', '-config', '--config').
 
 ```yaml
+debug: false
 host: ""
 port: 8080
 show-listing: true

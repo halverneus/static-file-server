@@ -14,6 +14,7 @@ import (
 var (
 	// Get the desired configuration value.
 	Get struct {
+		Debug       bool   `yaml:"debug"`
 		Folder      string `yaml:"folder"`
 		Host        string `yaml:"host"`
 		Port        uint16 `yaml:"port"`
@@ -25,6 +26,7 @@ var (
 )
 
 const (
+	debugKey       = "DEBUG"
 	folderKey      = "FOLDER"
 	hostKey        = "HOST"
 	portKey        = "PORT"
@@ -35,6 +37,7 @@ const (
 )
 
 const (
+	defaultDebug       = false
 	defaultFolder      = "/web"
 	defaultHost        = ""
 	defaultPort        = uint16(8080)
@@ -50,6 +53,7 @@ func init() {
 }
 
 func setDefaults() {
+	Get.Debug = defaultDebug
 	Get.Folder = defaultFolder
 	Get.Host = defaultHost
 	Get.Port = defaultPort
@@ -82,9 +86,21 @@ func Load(filename string) (err error) {
 	return validate()
 }
 
+// Log the current configuration.
+func Log() {
+	// YAML marshalling should never error, but if it could, the result is that
+	// the contents of the configuration are not logged.
+	contents, _ := yaml.Marshal(&Get)
+
+	// Log the configuration.
+	fmt.Println("Using the following configuration:")
+	fmt.Println(string(contents))
+}
+
 // overrideWithEnvVars the default values and the configuration file values.
 func overrideWithEnvVars() {
 	// Assign envvars, if set.
+	Get.Debug = envAsBool(debugKey, Get.Debug)
 	Get.Folder = envAsStr(folderKey, Get.Folder)
 	Get.Host = envAsStr(hostKey, Get.Host)
 	Get.Port = envAsUint16(portKey, Get.Port)
