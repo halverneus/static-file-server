@@ -33,6 +33,10 @@ DEPENDENCIES
     None... not even libc!
 
 ENVIRONMENT VARIABLES
+    DEBUG
+        When set to 'true' enables additional logging, including the
+        configuration used and an access log for each request. Default value is
+        'false'.
     FOLDER
         The path to the folder containing the contents to be served over
         HTTP(s). If not supplied, defaults to '/web' (for Docker reasons).
@@ -69,6 +73,7 @@ CONFIGURATION FILE
 
     Example config.yml with defaults:
     ----------------------------------------------------------------------------
+    debug: false
     folder: /web
     host: ""
     port: 8080

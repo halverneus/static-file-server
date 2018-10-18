@@ -16,6 +16,9 @@ var (
 
 // Run server.
 func Run() error {
+	if config.Get.Debug {
+		config.Log()
+	}
 	// Choose and set the appropriate, optimized static file serving function.
 	handler := selectHandler()
 
@@ -30,11 +33,21 @@ func Run() error {
 // handlerSelector returns the appropriate request handler based on
 // configuration.
 func handlerSelector() (handler http.HandlerFunc) {
+	var serveFileHandler handle.FileServerFunc
+	serveFileHandler = http.ServeFile
+	if config.Get.Debug {
+		serveFileHandler = handle.WithLogging(serveFileHandler)
+	}
+
 	// Choose and set the appropriate, optimized static file serving function.
 	if 0 == len(config.Get.URLPrefix) {
-		handler = handle.Basic(config.Get.Folder)
+		handler = handle.Basic(serveFileHandler, config.Get.Folder)
 	} else {
-		handler = handle.Prefix(config.Get.Folder, config.Get.URLPrefix)
+		handler = handle.Prefix(
+			serveFileHandler,
+			config.Get.Folder,
+			config.Get.URLPrefix,
+		)
 	}
 
 	// Determine whether index files should hidden.

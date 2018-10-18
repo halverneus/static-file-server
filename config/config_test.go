@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"testing"
+
+	"gopkg.in/yaml.v2"
 )
 
 func TestLoad(t *testing.T) {
@@ -65,8 +67,17 @@ func TestLoad(t *testing.T) {
 	}(t)
 }
 
+func TestLog(t *testing.T) {
+	// Test whether YAML marshalling works, as that is the only error case.
+	if _, err := yaml.Marshal(&Get); nil != err {
+		t.Errorf("While testing YAML marshalling for config Log() got %v", err)
+	}
+	Log()
+}
+
 func TestOverrideWithEnvvars(t *testing.T) {
 	// Choose values that are different than defaults.
+	testDebug := true
 	testFolder := "/my/directory"
 	testHost := "apets.life"
 	testPort := uint16(666)
@@ -76,6 +87,7 @@ func TestOverrideWithEnvvars(t *testing.T) {
 	testURLPrefix := "/url/prefix"
 
 	// Set all environment variables with test values.
+	os.Setenv(debugKey, fmt.Sprintf("%t", testDebug))
 	os.Setenv(folderKey, testFolder)
 	os.Setenv(hostKey, testHost)
 	os.Setenv(portKey, strconv.Itoa(int(testPort)))
@@ -113,6 +125,7 @@ func TestOverrideWithEnvvars(t *testing.T) {
 	// Verify defaults.
 	setDefaults()
 	phase := "defaults"
+	equalBool(t, phase, debugKey, defaultDebug, Get.Debug)
 	equalStrings(t, phase, folderKey, defaultFolder, Get.Folder)
 	equalStrings(t, phase, hostKey, defaultHost, Get.Host)
 	equalUint16(t, phase, portKey, defaultPort, Get.Port)
@@ -126,6 +139,7 @@ func TestOverrideWithEnvvars(t *testing.T) {
 
 	// Verify overrides.
 	phase = "overrides"
+	equalBool(t, phase, debugKey, testDebug, Get.Debug)
 	equalStrings(t, phase, folderKey, testFolder, Get.Folder)
 	equalStrings(t, phase, hostKey, testHost, Get.Host)
 	equalUint16(t, phase, portKey, testPort, Get.Port)

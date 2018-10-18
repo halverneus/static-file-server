@@ -46,6 +46,11 @@ var (
 		baseDir + tmpSubDeepIndexName: tmpSubDeepIndex,
 		baseDir + tmpSubDeepFileName:  tmpSubDeepFile,
 	}
+
+	serveFileFuncs = []FileServerFunc{
+		http.ServeFile,
+		WithLogging(http.ServeFile),
+	}
 )
 
 func TestMain(m *testing.M) {
@@ -79,7 +84,7 @@ func teardown() (err error) {
 	return os.RemoveAll("tmp")
 }
 
-func TestBasic(t *testing.T) {
+func TestBasicWithAndWithoutLogging(t *testing.T) {
 	testCases := []struct {
 		name     string
 		path     string
@@ -95,34 +100,36 @@ func TestBasic(t *testing.T) {
 		{"Good subdir file", tmpSubFileName, ok, tmpSubFile},
 	}
 
-	handler := Basic(baseDir)
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			fullpath := "http://localhost/" + tc.path
-			req := httptest.NewRequest("GET", fullpath, nil)
-			w := httptest.NewRecorder()
+	for _, serveFile := range serveFileFuncs {
+		handler := Basic(serveFile, baseDir)
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				fullpath := "http://localhost/" + tc.path
+				req := httptest.NewRequest("GET", fullpath, nil)
+				w := httptest.NewRecorder()
 
-			handler(w, req)
+				handler(w, req)
 
-			resp := w.Result()
-			body, err := ioutil.ReadAll(resp.Body)
-			if nil != err {
-				t.Errorf("While reading body got %v", err)
-			}
-			contents := string(body)
-			if tc.code != resp.StatusCode {
-				t.Errorf(
-					"While retrieving %s expected status code of %d but got %d",
-					fullpath, tc.code, resp.StatusCode,
-				)
-			}
-			if tc.contents != contents {
-				t.Errorf(
-					"While retrieving %s expected contents '%s' but got '%s'",
-					fullpath, tc.contents, contents,
-				)
-			}
-		})
+				resp := w.Result()
+				body, err := ioutil.ReadAll(resp.Body)
+				if nil != err {
+					t.Errorf("While reading body got %v", err)
+				}
+				contents := string(body)
+				if tc.code != resp.StatusCode {
+					t.Errorf(
+						"While retrieving %s expected status code of %d but got %d",
+						fullpath, tc.code, resp.StatusCode,
+					)
+				}
+				if tc.contents != contents {
+					t.Errorf(
+						"While retrieving %s expected contents '%s' but got '%s'",
+						fullpath, tc.contents, contents,
+					)
+				}
+			})
+		}
 	}
 }
 
@@ -145,34 +152,36 @@ func TestPrefix(t *testing.T) {
 		{"Unknown prefix", tmpFileName, missing, notFound},
 	}
 
-	handler := Prefix(baseDir, prefix)
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			fullpath := "http://localhost" + tc.path
-			req := httptest.NewRequest("GET", fullpath, nil)
-			w := httptest.NewRecorder()
+	for _, serveFile := range serveFileFuncs {
+		handler := Prefix(serveFile, baseDir, prefix)
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				fullpath := "http://localhost" + tc.path
+				req := httptest.NewRequest("GET", fullpath, nil)
+				w := httptest.NewRecorder()
 
-			handler(w, req)
+				handler(w, req)
 
-			resp := w.Result()
-			body, err := ioutil.ReadAll(resp.Body)
-			if nil != err {
-				t.Errorf("While reading body got %v", err)
-			}
-			contents := string(body)
-			if tc.code != resp.StatusCode {
-				t.Errorf(
-					"While retrieving %s expected status code of %d but got %d",
-					fullpath, tc.code, resp.StatusCode,
-				)
-			}
-			if tc.contents != contents {
-				t.Errorf(
-					"While retrieving %s expected contents '%s' but got '%s'",
-					fullpath, tc.contents, contents,
-				)
-			}
-		})
+				resp := w.Result()
+				body, err := ioutil.ReadAll(resp.Body)
+				if nil != err {
+					t.Errorf("While reading body got %v", err)
+				}
+				contents := string(body)
+				if tc.code != resp.StatusCode {
+					t.Errorf(
+						"While retrieving %s expected status code of %d but got %d",
+						fullpath, tc.code, resp.StatusCode,
+					)
+				}
+				if tc.contents != contents {
+					t.Errorf(
+						"While retrieving %s expected contents '%s' but got '%s'",
+						fullpath, tc.contents, contents,
+					)
+				}
+			})
+		}
 	}
 }
 
@@ -192,63 +201,38 @@ func TestIgnoreIndex(t *testing.T) {
 		{"Good subdir file", tmpSubFileName, ok, tmpSubFile},
 	}
 
-	handler := IgnoreIndex(Basic(baseDir))
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			fullpath := "http://localhost/" + tc.path
-			req := httptest.NewRequest("GET", fullpath, nil)
-			w := httptest.NewRecorder()
+	for _, serveFile := range serveFileFuncs {
+		handler := IgnoreIndex(Basic(serveFile, baseDir))
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				fullpath := "http://localhost/" + tc.path
+				req := httptest.NewRequest("GET", fullpath, nil)
+				w := httptest.NewRecorder()
 
-			handler(w, req)
+				handler(w, req)
 
-			resp := w.Result()
-			body, err := ioutil.ReadAll(resp.Body)
-			if nil != err {
-				t.Errorf("While reading body got %v", err)
-			}
-			contents := string(body)
-			if tc.code != resp.StatusCode {
-				t.Errorf(
-					"While retrieving %s expected status code of %d but got %d",
-					fullpath, tc.code, resp.StatusCode,
-				)
-			}
-			if tc.contents != contents {
-				t.Errorf(
-					"While retrieving %s expected contents '%s' but got '%s'",
-					fullpath, tc.contents, contents,
-				)
-			}
-		})
+				resp := w.Result()
+				body, err := ioutil.ReadAll(resp.Body)
+				if nil != err {
+					t.Errorf("While reading body got %v", err)
+				}
+				contents := string(body)
+				if tc.code != resp.StatusCode {
+					t.Errorf(
+						"While retrieving %s expected status code of %d but got %d",
+						fullpath, tc.code, resp.StatusCode,
+					)
+				}
+				if tc.contents != contents {
+					t.Errorf(
+						"While retrieving %s expected contents '%s' but got '%s'",
+						fullpath, tc.contents, contents,
+					)
+				}
+			})
+		}
 	}
 }
-
-// func TestIgnoreIndex(t *testing.T) {
-// 	handler := IgnoreIndex(Basic("tmp"))
-// 	testCases := []struct {
-// 		name     string
-// 		path     string
-// 		code     int
-// 		contents string
-// 	}{}
-
-// 	// Build test cases for directories.
-// 	var dirs []string
-// 	for filename, contents := range files {
-// 		dir := path.Dir(filename)
-// 		found := false
-// 		for _, other := range dirs {
-// 			if other == dir {
-// 				found = true
-// 				break
-// 			}
-// 		}
-// 		if !found {
-// 			dirs = append(dirs, dir)
-// 		}
-// 	}
-
-// }
 
 func TestListening(t *testing.T) {
 	// Choose values for testing.
