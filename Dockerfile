@@ -1,4 +1,4 @@
-FROM golang:1.11.1 as builder
+FROM golang:1.11.2 as builder
 
 EXPOSE 8080
 
@@ -20,4 +20,5 @@ RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o /serve ${MAIN}
 
 FROM scratch
 COPY --from=builder /serve /
-CMD ["/serve"]
+ENTRYPOINT ["/serve"]
+CMD []
