@@ -16,7 +16,7 @@ var (
 	MajorVersion = 1
 
 	// MinorVersion of static-file-server.
-	MinorVersion = 4
+	MinorVersion = 5
 
 	// FixVersion of static-file-server.
 	FixVersion = 0

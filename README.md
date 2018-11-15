@@ -1,15 +1,21 @@
 # static-file-server
 
-Tiny, simple static file server using environment variables for configuration
+## Introduction
+Tiny, simple static file server using environment variables for configuration.
+Install from any of the following locations:
 
-Available on Docker Hub at https://hub.docker.com/r/halverneus/static-file-server/
-Available on GitHub at https://github.com/halverneus/static-file-server
+- Docker Hub: https://hub.docker.com/r/halverneus/static-file-server/
+- GitHub: https://github.com/halverneus/static-file-server
 
-Environment variables with defaults:
+## Configuration
+
+### Environment Variables
+
+Default values are shown with the associated environment variable.
 
 ```bash
 # Enable debugging for troubleshooting. If set to 'true' this prints extra
-# information during execution. Default value is 'false'.
+# information during execution.
 DEBUG=false
 # Optional Hostname for binding. Leave black to accept any incoming HTTP request
 # on the prescribed port.
@@ -31,10 +37,12 @@ TLS_CERT=
 TLS_KEY=
 ```
 
-Matching configuration YAML settings. YAML settings are individually overridden
-by the corresponding environment variable. The following is an example
-configuration file with defaults. Pass in the path to the configuration file
-using the command line option ('-c', '-config', '--config').
+### YAML Configuration File
+
+YAML settings are individually overridden by the corresponding environment
+variable. The following is an example configuration file with defaults. Pass in
+the path to the configuration file using the command line option
+('-c', '-config', '--config').
 
 ```yaml
 debug: false
@@ -47,7 +55,9 @@ tls-cert: ""
 tls-key: ""
 ```
 
-## Without Docker
+## Deployment
+
+### Without Docker
 
 ```bash
 PORT=8888 FOLDER=. ./serve
@@ -55,10 +65,13 @@ PORT=8888 FOLDER=. ./serve
 
 Files can then be accessed by going to http://localhost:8888/my/file.txt
 
-## With Docker
+### With Docker
 
 ```bash
-docker run -d -v /my/folder:/web -p 8080:8080 halverneus/static-file-server:latest
+docker run -d \
+    -v /my/folder:/web \
+    -p 8080:8080 \
+    halverneus/static-file-server:latest
 ```
 
 This will serve the folder "/my/folder" over http://localhost:8080/my/file.txt
@@ -66,15 +79,18 @@ This will serve the folder "/my/folder" over http://localhost:8080/my/file.txt
 Any of the variables can also be modified:
 
 ```bash
-docker run -d -v /home/me/dev/source:/content/html -v /home/me/dev/files:/content/more/files -e FOLDER=/content -p 8080:8080 halverneus/static-file-server:latest
+docker run -d \
+    -v /home/me/dev/source:/content/html \
+    -v /home/me/dev/files:/content/more/files \
+    -e FOLDER=/content \
+    -p 8080:8080 \
+    halverneus/static-file-server:latest
 ```
 
-## Also try...
+### Getting Help
 
 ```bash
 ./serve help
 # OR
 docker run -it halverneus/static-file-server:latest help
 ```
-
-This maybe a cheesy program, but it is convenient and less than 6MB in size.
