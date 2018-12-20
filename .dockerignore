@@ -1,5 +1,6 @@
 .git
 .gitignore
 Dockerfile
+Dockerfile.all
 LICENSE
 README.md
