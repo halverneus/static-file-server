@@ -19,7 +19,7 @@ var (
 	MinorVersion = 5
 
 	// FixVersion of static-file-server.
-	FixVersion = 0
+	FixVersion = 1
 
 	// Text for directly accessing the static-file-server version.
 	Text = fmt.Sprintf(

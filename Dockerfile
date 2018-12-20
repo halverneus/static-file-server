@@ -1,9 +1,14 @@
-FROM golang:1.11 as builder
+FROM golang:1.11.3 as builder
 
 EXPOSE 8080
 
-RUN mkdir -p /build
-WORKDIR /build
+ENV BUILD_DIR /build
+
+RUN mkdir -p ${BUILD_DIR}
+WORKDIR ${BUILD_DIR}
+
+COPY go.* ./
+RUN go mod download
 COPY . .
 
 RUN go test -cover ./...
