@@ -8,6 +8,7 @@ RUN mkdir -p ${BUILD_DIR}
 WORKDIR ${BUILD_DIR}
 
 COPY . .
+RUN go test -race -cover ./...
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/linux-amd64/serve /build/bin/serve
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/linux-arm6/serve /build/bin/serve
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/linux-arm7/serve /build/bin/serve
