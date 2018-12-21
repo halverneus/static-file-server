@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -a -tags netgo -install
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/linux-arm7/serve /build/bin/serve
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/linux-arm64/serve /build/bin/serve
 RUN CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/darwin-amd64/serve /build/bin/serve
-RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/win-amd64/serve.exe /build/bin/serve.exe
+RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o pkg/win-amd64/serve.exe /build/bin/serve
 
 # Metadata
 LABEL life.apets.vendor="Halverneus" \
