@@ -1,24 +1,28 @@
-FROM golang:1.11.2 as builder
+FROM golang:1.11.3 as builder
 
 EXPOSE 8080
-
-ENV BUILD_DIR /go/src/github.com/halverneus/static-file-server
-ENV MAIN github.com/halverneus/static-file-server/bin/serve
-ENV DEP_VERSION v0.5.0
-
-RUN curl -fsSL -o /usr/local/bin/dep \
-    https://github.com/golang/dep/releases/download/$DEP_VERSION/dep-linux-amd64 && \
-    chmod +x /usr/local/bin/dep
+ENV VERSION 1.5.1
+ENV BUILD_DIR /build
 
 RUN mkdir -p ${BUILD_DIR}
 WORKDIR ${BUILD_DIR}
+
+COPY go.* ./
+RUN go mod download
 COPY . .
 
-RUN dep ensure -vendor-only
-RUN go test -race -cover ./...
-RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o /serve ${MAIN}
+RUN go test -cover ./...
+RUN CGO_ENABLED=0 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o /serve /build/bin/serve
 
 FROM scratch
 COPY --from=builder /serve /
 ENTRYPOINT ["/serve"]
 CMD []
+
+# Metadata
+LABEL life.apets.vendor="Halverneus" \
+      life.apets.url="https://github.com/halverneus/static-file-server" \
+      life.apets.name="Static File Server" \
+      life.apets.description="A tiny static file server" \
+      life.apets.version="v1.5.1" \
+      life.apets.schema-version="1.0"
