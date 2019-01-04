@@ -1,6 +1,5 @@
 FROM golang:1.11.3 as builder
 
-EXPOSE 8080
 ENV VERSION 1.5.1
 ENV BUILD_DIR /build
 
