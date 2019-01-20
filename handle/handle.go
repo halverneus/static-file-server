@@ -26,12 +26,54 @@ type ListenerFunc func(string, http.HandlerFunc) error
 // requesting client.
 type FileServerFunc func(http.ResponseWriter, *http.Request, string)
 
+func validReferrer(s []string, e string) bool {
+	if (s == nil) {
+		// log.Printf("No referrers specified, all fine.")
+		return true
+	}
+
+	// log.Printf("Checking referrers " + strings.Join(s, ",")  + " against " + e)
+
+	for _, a := range s {
+		// Handle blank HTTP Referer header, if configured
+		if (a == "") {
+			if (e == "") {
+				// log.Printf("No referrer in request. Allowing.");
+				return true;
+			}
+			// Continue loop (all strings start with "")
+			continue;
+		}
+
+		// Compare header with allowed prefixes
+		if strings.HasPrefix(e, a) {
+			// log.Printf(strings.Join([]string{ "Referrer match", e, a }, " "));
+			return true
+		}
+	}
+	return false
+}
+
+func WithReferrers(serveFile FileServerFunc, referrers []string) FileServerFunc {
+	return func(w http.ResponseWriter, r *http.Request, name string) {
+		if (validReferrer(referrers, r.Referer())) {
+			// log.Printf("Serving file.")
+			serveFile(w, r, name)
+		} else {
+				// log.Printf(strings.Join([]string{"Invalid referrer", r.Referer(), "Not in", strings.Join(referrers, ",")}, " "))
+				http.Error(w, strings.Join([]string{ "Invalid source", r.Referer() }, " "), 403)
+				return
+		}
+	}
+}
+
 // WithLogging returns a function that logs information about the request prior
 // to serving the requested file.
 func WithLogging(serveFile FileServerFunc) FileServerFunc {
 	return func(w http.ResponseWriter, r *http.Request, name string) {
 		log.Printf(
-			"REQ: %s %s %s%s -> %s\n",
+			"REQ from %s: %s %s %s%s -> %s\n",
+			r.Referer(),
 			r.Method,
 			r.Proto,
 			r.Host,

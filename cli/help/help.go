@@ -63,6 +63,10 @@ ENVIRONMENT VARIABLES
         The prefix to use in the URL path. If supplied, then the prefix must
         start with a forward-slash and NOT end with a forward-slash. If not
         supplied then no prefix is used.
+    REFERRERS
+        A comma-separated list of valid HTTP Referer prefixes. If incoming header
+        value is not in this list, a 403 HTTP error is returned.
+        Examples: 'http://localhost,https://some.site,http://other.site:8080'
 
 CONFIGURATION FILE
     Configuration can also managed used a YAML configuration file. To select the
@@ -81,6 +85,8 @@ CONFIGURATION FILE
     tls-cert: ""
     tls-key: ""
     url-prefix: ""
+    referrers:
+      - http://localhost
     ----------------------------------------------------------------------------
 
 USAGE
@@ -99,7 +105,7 @@ USAGE
         export PORT=80
         static-file-server
             Retrieve with: wget http://my.machine/sub/my.file
-        
+
         export FOLDER=/var/www
         static-file-server -c config.yml
             Result: Runs with values from config.yml, but with the folder being
