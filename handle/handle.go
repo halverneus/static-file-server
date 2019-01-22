@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -26,44 +27,21 @@ type ListenerFunc func(string, http.HandlerFunc) error
 // requesting client.
 type FileServerFunc func(http.ResponseWriter, *http.Request, string)
 
-func validReferrer(s []string, e string) bool {
-	if (s == nil) {
-		// log.Printf("No referrers specified, all fine.")
-		return true
-	}
-
-	// log.Printf("Checking referrers " + strings.Join(s, ",")  + " against " + e)
-
-	for _, a := range s {
-		// Handle blank HTTP Referer header, if configured
-		if (a == "") {
-			if (e == "") {
-				// log.Printf("No referrer in request. Allowing.");
-				return true;
-			}
-			// Continue loop (all strings start with "")
-			continue;
-		}
-
-		// Compare header with allowed prefixes
-		if strings.HasPrefix(e, a) {
-			// log.Printf(strings.Join([]string{ "Referrer match", e, a }, " "));
-			return true
-		}
-	}
-	return false
-}
-
+// WithReferrers returns a function that evaluates the HTTP 'Referer' header
+// value and returns HTTP error 403 if the value is not found in the whitelist.
+// If one of the whitelisted referrers are an empty string, then it is allowed
+// for the 'Referer' HTTP header key to not be set.
 func WithReferrers(serveFile FileServerFunc, referrers []string) FileServerFunc {
 	return func(w http.ResponseWriter, r *http.Request, name string) {
-		if (validReferrer(referrers, r.Referer())) {
-			// log.Printf("Serving file.")
-			serveFile(w, r, name)
-		} else {
-				// log.Printf(strings.Join([]string{"Invalid referrer", r.Referer(), "Not in", strings.Join(referrers, ",")}, " "))
-				http.Error(w, strings.Join([]string{ "Invalid source", r.Referer() }, " "), 403)
-				return
+		if !validReferrer(referrers, r.Referer()) {
+			http.Error(
+				w,
+				fmt.Sprintf("Invalid source '%s'", r.Referer()),
+				http.StatusForbidden,
+			)
+			return
 		}
+		serveFile(w, r, name)
 	}
 }
 
@@ -72,7 +50,7 @@ func WithReferrers(serveFile FileServerFunc, referrers []string) FileServerFunc 
 func WithLogging(serveFile FileServerFunc) FileServerFunc {
 	return func(w http.ResponseWriter, r *http.Request, name string) {
 		log.Printf(
-			"REQ from %s: %s %s %s%s -> %s\n",
+			"REQ from '%s': %s %s %s%s -> %s\n",
 			r.Referer(),
 			r.Method,
 			r.Proto,
@@ -131,4 +109,30 @@ func TLSListening(tlsCert, tlsKey string) ListenerFunc {
 		setHandler("/", handler)
 		return listenAndServeTLS(binding, tlsCert, tlsKey, nil)
 	}
+}
+
+// validReferrer returns true if the passed referrer can be resolved by the
+// passed list of referrers.
+func validReferrer(s []string, e string) bool {
+	// Whitelisted referer list is empty. All requests are allowed.
+	if 0 == len(s) {
+		return true
+	}
+
+	for _, a := range s {
+		// Handle blank HTTP Referer header, if configured
+		if a == "" {
+			if e == "" {
+				return true
+			}
+			// Continue loop (all strings start with "")
+			continue
+		}
+
+		// Compare header with allowed prefixes
+		if strings.HasPrefix(e, a) {
+			return true
+		}
+	}
+	return false
 }
