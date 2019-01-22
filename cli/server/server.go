@@ -34,9 +34,14 @@ func Run() error {
 // configuration.
 func handlerSelector() (handler http.HandlerFunc) {
 	var serveFileHandler handle.FileServerFunc
+
 	serveFileHandler = http.ServeFile
 	if config.Get.Debug {
 		serveFileHandler = handle.WithLogging(serveFileHandler)
+	}
+
+	if config.Get.Referrers != nil {
+		serveFileHandler = handle.WithReferrers(serveFileHandler, config.Get.Referrers)
 	}
 
 	// Choose and set the appropriate, optimized static file serving function.

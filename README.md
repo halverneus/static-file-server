@@ -35,6 +35,13 @@ URL_PREFIX=
 # served using HTTP.
 TLS_CERT=
 TLS_KEY=
+# List of accepted HTTP referrers. Return 403 if HTTP header `Referer` does not
+# match prefixes provided in the list.
+# Examples:
+#   'REFERRERS=http://localhost,https://...,https://another.name'
+#   To accept missing referrer header, add a blank entry (start comma):
+#   'REFERRERS=,http://localhost,https://another.name'
+REFERRERS=
 ```
 
 ### YAML Configuration File
@@ -53,6 +60,9 @@ folder: /web
 url-prefix: ""
 tls-cert: ""
 tls-key: ""
+referrers:
+  - http://localhost
+  - https://my.site
 ```
 
 ## Deployment

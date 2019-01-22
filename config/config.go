@@ -22,6 +22,7 @@ var (
 		TLSCert     string `yaml:"tls-cert"`
 		TLSKey      string `yaml:"tls-key"`
 		URLPrefix   string `yaml:"url-prefix"`
+		Referrers   []string `yaml:"referrers"`
 	}
 )
 
@@ -34,6 +35,7 @@ const (
 	tlsCertKey     = "TLS_CERT"
 	tlsKeyKey      = "TLS_KEY"
 	urlPrefixKey   = "URL_PREFIX"
+	referrersKey   = "REFERRERS"
 )
 
 const (
@@ -61,6 +63,7 @@ func setDefaults() {
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
 	Get.URLPrefix = defaultURLPrefix
+	Get.Referrers = nil
 }
 
 // Load the configuration file.
@@ -108,6 +111,7 @@ func overrideWithEnvVars() {
 	Get.TLSCert = envAsStr(tlsCertKey, Get.TLSCert)
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
+	Get.Referrers = strAsArray(envAsStr(referrersKey, ""))
 }
 
 // validate the configuration.
@@ -209,5 +213,13 @@ func strAsBool(value string) (result bool, err error) {
 		msg := "Unknown conversion from string to bool for value '%s'"
 		err = fmt.Errorf(msg, value)
 	}
+	return
+}
+
+func strAsArray(value string) (result []string) {
+	if (value == "") {
+		return nil
+	}
+	result = strings.Split(value, ",");
 	return
 }
