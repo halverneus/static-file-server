@@ -32,6 +32,8 @@ func TestHandlerSelector(t *testing.T) {
 	// This test only exercises function branches.
 	testFolder := "/web"
 	testPrefix := "/url/prefix"
+	var ignoreReferrer []string
+	testReferrer := []string{"http://localhost"}
 
 	testCases := []struct {
 		name    string
@@ -39,15 +41,24 @@ func TestHandlerSelector(t *testing.T) {
 		prefix  string
 		listing bool
 		debug   bool
+		refer   []string
 	}{
-		{"Basic handler w/o debug", testFolder, "", true, false},
-		{"Prefix handler w/o debug", testFolder, testPrefix, true, false},
-		{"Basic and hide listing handler w/o debug", testFolder, "", false, false},
-		{"Prefix and hide listing handler w/o debug", testFolder, testPrefix, false, false},
-		{"Basic handler w/debug", testFolder, "", true, true},
-		{"Prefix handler w/debug", testFolder, testPrefix, true, true},
-		{"Basic and hide listing handler w/debug", testFolder, "", false, true},
-		{"Prefix and hide listing handler w/debug", testFolder, testPrefix, false, true},
+		{"Basic handler w/o debug", testFolder, "", true, false, ignoreReferrer},
+		{"Prefix handler w/o debug", testFolder, testPrefix, true, false, ignoreReferrer},
+		{"Basic and hide listing handler w/o debug", testFolder, "", false, false, ignoreReferrer},
+		{"Prefix and hide listing handler w/o debug", testFolder, testPrefix, false, false, ignoreReferrer},
+		{"Basic handler w/debug", testFolder, "", true, true, ignoreReferrer},
+		{"Prefix handler w/debug", testFolder, testPrefix, true, true, ignoreReferrer},
+		{"Basic and hide listing handler w/debug", testFolder, "", false, true, ignoreReferrer},
+		{"Prefix and hide listing handler w/debug", testFolder, testPrefix, false, true, ignoreReferrer},
+		{"Basic handler w/o debug w/refer", testFolder, "", true, false, testReferrer},
+		{"Prefix handler w/o debug w/refer", testFolder, testPrefix, true, false, testReferrer},
+		{"Basic and hide listing handler w/o debug w/refer", testFolder, "", false, false, testReferrer},
+		{"Prefix and hide listing handler w/o debug w/refer", testFolder, testPrefix, false, false, testReferrer},
+		{"Basic handler w/debug w/refer", testFolder, "", true, true, testReferrer},
+		{"Prefix handler w/debug w/refer", testFolder, testPrefix, true, true, testReferrer},
+		{"Basic and hide listing handler w/debug w/refer", testFolder, "", false, true, testReferrer},
+		{"Prefix and hide listing handler w/debug w/refer", testFolder, testPrefix, false, true, testReferrer},
 	}
 
 	for _, tc := range testCases {
@@ -56,6 +67,7 @@ func TestHandlerSelector(t *testing.T) {
 			config.Get.Folder = tc.folder
 			config.Get.ShowListing = tc.listing
 			config.Get.URLPrefix = tc.prefix
+			config.Get.Referrers = tc.refer
 
 			handlerSelector()
 		})

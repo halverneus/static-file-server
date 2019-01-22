@@ -40,8 +40,10 @@ func handlerSelector() (handler http.HandlerFunc) {
 		serveFileHandler = handle.WithLogging(serveFileHandler)
 	}
 
-	if config.Get.Referrers != nil {
-		serveFileHandler = handle.WithReferrers(serveFileHandler, config.Get.Referrers)
+	if 0 != len(config.Get.Referrers) {
+		serveFileHandler = handle.WithReferrers(
+			serveFileHandler, config.Get.Referrers,
+		)
 	}
 
 	// Choose and set the appropriate, optimized static file serving function.
