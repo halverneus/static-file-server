@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestLoad(t *testing.T) {
@@ -238,6 +238,98 @@ func TestEnvAsStr(t *testing.T) {
 			if tc.result != result {
 				t.Errorf(
 					"For %s with a '%s' fallback expected '%s' but got '%s'",
+					tc.key, tc.fallback, tc.result, result,
+				)
+			}
+		})
+	}
+}
+
+func TestEnvAsStrSlice(t *testing.T) {
+	oe := "ONE_ENTRY"
+	oewc := "ONE_ENTRY_WITH_COMMA"
+	oewtc := "ONE_ENTRY_WITH_TRAILING_COMMA"
+	te := "TWO_ENTRY"
+	tewc := "TWO_ENTRY_WITH_COMMA"
+	oc := "ONLY_COMMA"
+	ev := "EMPTY_VALUE"
+	uv := "UNSET_VALUE"
+
+	fs := "http://my.site"
+	ts := "http://other.site"
+	fbr := []string{"one", "two"}
+	var efbr []string
+
+	oes := fs
+	oer := []string{fs}
+	oewcs := "," + fs
+	oewcr := []string{"", fs}
+	oewtcs := fs + ","
+	oewtcr := []string{fs, ""}
+	tes := fs + "," + ts
+	ter := []string{fs, ts}
+	tewcs := "," + fs + "," + ts
+	tewcr := []string{"", fs, ts}
+	ocs := ","
+	ocr := []string{"", ""}
+	evs := ""
+
+	os.Setenv(oe, oes)
+	os.Setenv(oewc, oewcs)
+	os.Setenv(oewtc, oewtcs)
+	os.Setenv(te, tes)
+	os.Setenv(tewc, tewcs)
+	os.Setenv(oc, ocs)
+	os.Setenv(ev, evs)
+
+	testCases := []struct {
+		name     string
+		key      string
+		fallback []string
+		result   []string
+	}{
+		{"One entry", oe, fbr, oer},
+		{"One entry w/comma", oewc, fbr, oewcr},
+		{"One entry w/trailing comma", oewtc, fbr, oewtcr},
+		{"Two entry", te, fbr, ter},
+		{"Two entry w/comma", tewc, fbr, tewcr},
+		{"Only comma", oc, fbr, ocr},
+		{"Empty value w/fallback", ev, fbr, fbr},
+		{"Empty value wo/fallback", ev, efbr, efbr},
+		{"Unset w/fallback", uv, fbr, fbr},
+		{"Unset wo/fallback", uv, efbr, efbr},
+	}
+
+	matches := func(a, b []string) bool {
+		if len(a) != len(b) {
+			return false
+		}
+		tally := make(map[int]bool)
+		for i := range a {
+			tally[i] = false
+		}
+		for _, val := range a {
+			for i, other := range b {
+				if other == val && !tally[i] {
+					tally[i] = true
+					break
+				}
+			}
+		}
+		for _, found := range tally {
+			if !found {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := envAsStrSlice(tc.key, tc.fallback)
+			if !matches(tc.result, result) {
+				t.Errorf(
+					"For %s with a '%v' fallback expected '%v' but got '%v'",
 					tc.key, tc.fallback, tc.result, result,
 				)
 			}
