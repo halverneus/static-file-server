@@ -14,14 +14,15 @@ import (
 var (
 	// Get the desired configuration value.
 	Get struct {
-		Debug       bool   `yaml:"debug"`
-		Folder      string `yaml:"folder"`
-		Host        string `yaml:"host"`
-		Port        uint16 `yaml:"port"`
-		ShowListing bool   `yaml:"show-listing"`
-		TLSCert     string `yaml:"tls-cert"`
-		TLSKey      string `yaml:"tls-key"`
-		URLPrefix   string `yaml:"url-prefix"`
+		Debug       bool     `yaml:"debug"`
+		Folder      string   `yaml:"folder"`
+		Host        string   `yaml:"host"`
+		Port        uint16   `yaml:"port"`
+		ShowListing bool     `yaml:"show-listing"`
+		TLSCert     string   `yaml:"tls-cert"`
+		TLSKey      string   `yaml:"tls-key"`
+		URLPrefix   string   `yaml:"url-prefix"`
+		Referrers   []string `yaml:"referrers"`
 	}
 )
 
@@ -30,17 +31,19 @@ const (
 	folderKey      = "FOLDER"
 	hostKey        = "HOST"
 	portKey        = "PORT"
+	referrersKey   = "REFERRERS"
 	showListingKey = "SHOW_LISTING"
 	tlsCertKey     = "TLS_CERT"
 	tlsKeyKey      = "TLS_KEY"
 	urlPrefixKey   = "URL_PREFIX"
 )
 
-const (
+var (
 	defaultDebug       = false
 	defaultFolder      = "/web"
 	defaultHost        = ""
 	defaultPort        = uint16(8080)
+	defaultReferrers   = []string{}
 	defaultShowListing = true
 	defaultTLSCert     = ""
 	defaultTLSKey      = ""
@@ -57,6 +60,7 @@ func setDefaults() {
 	Get.Folder = defaultFolder
 	Get.Host = defaultHost
 	Get.Port = defaultPort
+	Get.Referrers = defaultReferrers
 	Get.ShowListing = defaultShowListing
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
@@ -108,6 +112,7 @@ func overrideWithEnvVars() {
 	Get.TLSCert = envAsStr(tlsCertKey, Get.TLSCert)
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
+	Get.Referrers = envAsStrSlice(referrersKey, Get.Referrers)
 }
 
 // validate the configuration.
@@ -146,6 +151,15 @@ func validate() error {
 func envAsStr(key, fallback string) string {
 	if value := os.Getenv(key); "" != value {
 		return value
+	}
+	return fallback
+}
+
+// envAsStrSlice returns the value of the environment variable as a slice of
+// strings if set.
+func envAsStrSlice(key string, fallback []string) []string {
+	if value := os.Getenv(key); "" != value {
+		return strings.Split(value, ",")
 	}
 	return fallback
 }

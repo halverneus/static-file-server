@@ -45,6 +45,17 @@ ENVIRONMENT VARIABLES
         to a client without regard for the hostname.
     PORT
         The port used for binding. If not supplied, defaults to port '8080'.
+    REFERRERS
+        A comma-separated list of acceped Referrers based on the 'Referer' HTTP
+        header. If incoming header value is not in the list, a 403 HTTP error is
+        returned. To accept requests without a 'Referer' HTTP header in addition
+        to the whitelisted values, include an empty value (either with a leading
+        comma in the environment variable or with an empty list item in the YAML
+        configuration file) as demonstrated in the second example. If not
+        supplied the 'Referer' HTTP header is ignored.
+        Examples:
+          REFERRERS='http://localhost,https://some.site,http://other.site:8080'
+          REFERRERS=',http://localhost,https://some.site,http://other.site:8080'
     SHOW_LISTING
         Automatically serve the index file for the directory if requested. For
         example, if the client requests 'http://127.0.0.1/' the 'index.html'
@@ -77,10 +88,21 @@ CONFIGURATION FILE
     folder: /web
     host: ""
     port: 8080
+    referrers: []
     show-listing: true
     tls-cert: ""
     tls-key: ""
     url-prefix: ""
+    ----------------------------------------------------------------------------
+
+    Example config.yml with possible alternative values:
+    ----------------------------------------------------------------------------
+    debug: true
+    folder: /var/www
+    port: 80
+    referrers:
+      - http://localhost
+      - https://mydomain.com
     ----------------------------------------------------------------------------
 
 USAGE
@@ -99,7 +121,7 @@ USAGE
         export PORT=80
         static-file-server
             Retrieve with: wget http://my.machine/sub/my.file
-        
+
         export FOLDER=/var/www
         static-file-server -c config.yml
             Result: Runs with values from config.yml, but with the folder being

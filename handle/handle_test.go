@@ -84,6 +84,73 @@ func teardown() (err error) {
 	return os.RemoveAll("tmp")
 }
 
+func TestWithReferrers(t *testing.T) {
+	forbidden := http.StatusForbidden
+
+	ok1 := "http://valid.com"
+	ok2 := "https://valid.com"
+	ok3 := "http://localhost"
+	bad := "http://other.pl"
+
+	var noRefer []string
+	emptyRefer := []string{}
+	onlyNoRefer := []string{""}
+	refer := []string{ok1, ok2, ok3}
+	noWithRefer := []string{"", ok1, ok2, ok3}
+
+	testCases := []struct {
+		name   string
+		refers []string
+		refer  string
+		code   int
+	}{
+		{"Nil refer list", noRefer, bad, ok},
+		{"Empty refer list", emptyRefer, bad, ok},
+		{"Unassigned allowed & unassigned", onlyNoRefer, "", ok},
+		{"Unassigned allowed & assigned", onlyNoRefer, bad, forbidden},
+		{"Whitelist with unassigned", refer, "", forbidden},
+		{"Whitelist with bad", refer, bad, forbidden},
+		{"Whitelist with ok1", refer, ok1, ok},
+		{"Whitelist with ok2", refer, ok2, ok},
+		{"Whitelist with ok3", refer, ok3, ok},
+		{"Whitelist and none with unassigned", noWithRefer, "", ok},
+		{"Whitelist with bad", noWithRefer, bad, forbidden},
+		{"Whitelist with ok1", noWithRefer, ok1, ok},
+		{"Whitelist with ok2", noWithRefer, ok2, ok},
+		{"Whitelist with ok3", noWithRefer, ok3, ok},
+	}
+
+	success := func(w http.ResponseWriter, r *http.Request, name string) {
+		defer r.Body.Close()
+		w.WriteHeader(ok)
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			handler := WithReferrers(success, tc.refers)
+
+			fullpath := "http://localhost/" + tmpIndexName
+			req := httptest.NewRequest("GET", fullpath, nil)
+			req.Header.Add("Referer", tc.refer)
+			w := httptest.NewRecorder()
+
+			handler(w, req, "")
+
+			resp := w.Result()
+			_, err := ioutil.ReadAll(resp.Body)
+			if nil != err {
+				t.Errorf("While reading body got %v", err)
+			}
+			if tc.code != resp.StatusCode {
+				t.Errorf(
+					"With referer '%s' in '%v' expected status code %d but got %d",
+					tc.refer, tc.refers, tc.code, resp.StatusCode,
+				)
+			}
+		})
+	}
+}
+
 func TestBasicWithAndWithoutLogging(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -331,5 +398,52 @@ func TestTLSListening(t *testing.T) {
 		t.Errorf(
 			"While serving second TLS got nil while expecting %v", testError,
 		)
+	}
+}
+
+func TestValidReferrer(t *testing.T) {
+	ok1 := "http://valid.com"
+	ok2 := "https://valid.com"
+	ok3 := "http://localhost"
+	bad := "http://other.pl"
+
+	var noRefer []string
+	emptyRefer := []string{}
+	onlyNoRefer := []string{""}
+	refer := []string{ok1, ok2, ok3}
+	noWithRefer := []string{"", ok1, ok2, ok3}
+
+	testCases := []struct {
+		name   string
+		refers []string
+		refer  string
+		result bool
+	}{
+		{"Nil refer list", noRefer, bad, true},
+		{"Empty refer list", emptyRefer, bad, true},
+		{"Unassigned allowed & unassigned", onlyNoRefer, "", true},
+		{"Unassigned allowed & assigned", onlyNoRefer, bad, false},
+		{"Whitelist with unassigned", refer, "", false},
+		{"Whitelist with bad", refer, bad, false},
+		{"Whitelist with ok1", refer, ok1, true},
+		{"Whitelist with ok2", refer, ok2, true},
+		{"Whitelist with ok3", refer, ok3, true},
+		{"Whitelist and none with unassigned", noWithRefer, "", true},
+		{"Whitelist with bad", noWithRefer, bad, false},
+		{"Whitelist with ok1", noWithRefer, ok1, true},
+		{"Whitelist with ok2", noWithRefer, ok2, true},
+		{"Whitelist with ok3", noWithRefer, ok3, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := validReferrer(tc.refers, tc.refer)
+			if result != tc.result {
+				t.Errorf(
+					"With referrers of '%v' and a value of '%s' expected %t but got %t",
+					tc.refers, tc.refer, tc.result, result,
+				)
+			}
+		})
 	}
 }
