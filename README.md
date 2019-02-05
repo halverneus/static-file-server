@@ -17,24 +17,31 @@ Default values are shown with the associated environment variable.
 # Enable debugging for troubleshooting. If set to 'true' this prints extra
 # information during execution.
 DEBUG=false
+
 # Optional Hostname for binding. Leave black to accept any incoming HTTP request
 # on the prescribed port.
 HOST=
+
 # If assigned, must be a valid port number.
 PORT=8080
+
 # Automatically serve the index file for a given directory (default). If set to
 # 'false', URLs ending with a '/' will return 'NOT FOUND'.
 SHOW_LISTING=true
+
 # Folder with the content to serve.
 FOLDER=/web
+
 # URL path prefix. If 'my.file' is in the root of $FOLDER and $URL_PREFIX is
 # '/my/place' then file is retrieved with 'http://$HOST:$PORT/my/place/my.file'.
 URL_PREFIX=
+
 # Paths to the TLS certificate and key. If one is set then both must be set. If
 # both set then files are served using HTTPS. If neither are set then files are
 # served using HTTP.
 TLS_CERT=
 TLS_KEY=
+
 # List of accepted HTTP referrers. Return 403 if HTTP header `Referer` does not
 # match prefixes provided in the list.
 # Examples:
@@ -53,16 +60,25 @@ the path to the configuration file using the command line option
 
 ```yaml
 debug: false
+folder: /web
 host: ""
 port: 8080
+referrers: []
 show-listing: true
-folder: /web
-url-prefix: ""
 tls-cert: ""
 tls-key: ""
+url-prefix: ""
+```
+
+Example configuration with possible alternative values:
+
+```yaml
+debug: true
+folder: /var/www
+port: 80
 referrers:
-  - http://localhost
-  - https://my.site
+    - http://localhost
+    - https://mydomain.com
 ```
 
 ## Deployment
