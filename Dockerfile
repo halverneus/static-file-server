@@ -3,7 +3,7 @@
 ################################################################################
 FROM golang:1.12.3 as builder
 
-ENV VERSION 1.6.3
+ENV VERSION 1.6.4
 ENV BUILD_DIR /build
 
 RUN mkdir -p ${BUILD_DIR}
@@ -31,5 +31,5 @@ LABEL life.apets.vendor="Halverneus" \
       life.apets.url="https://github.com/halverneus/static-file-server" \
       life.apets.name="Static File Server" \
       life.apets.description="A tiny static file server" \
-      life.apets.version="v1.6.3" \
+      life.apets.version="v1.6.4" \
       life.apets.schema-version="1.0"
