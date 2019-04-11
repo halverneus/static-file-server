@@ -35,8 +35,9 @@ DEPENDENCIES
 ENVIRONMENT VARIABLES
     DEBUG
         When set to 'true' enables additional logging, including the
-        configuration used and an access log for each request. Default value is
-        'false'.
+        configuration used and an access log for each request. IMPORTANT NOTE:
+        The configuration summary is printed to stdout while logs generated
+        during execution are printed to stderr. Default value is 'false'.
     FOLDER
         The path to the folder containing the contents to be served over
         HTTP(s). If not supplied, defaults to '/web' (for Docker reasons).

@@ -15,7 +15,8 @@ Default values are shown with the associated environment variable.
 
 ```bash
 # Enable debugging for troubleshooting. If set to 'true' this prints extra
-# information during execution.
+# information during execution. IMPORTANT NOTE: The configuration summary is
+# printed to stdout while logs generated during execution are printed to stderr.
 DEBUG=false
 
 # Optional Hostname for binding. Leave black to accept any incoming HTTP request
