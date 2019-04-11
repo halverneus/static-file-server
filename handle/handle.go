@@ -49,15 +49,29 @@ func WithReferrers(serveFile FileServerFunc, referrers []string) FileServerFunc 
 // to serving the requested file.
 func WithLogging(serveFile FileServerFunc) FileServerFunc {
 	return func(w http.ResponseWriter, r *http.Request, name string) {
-		log.Printf(
-			"REQ from '%s': %s %s %s%s -> %s\n",
-			r.Referer(),
-			r.Method,
-			r.Proto,
-			r.Host,
-			r.URL.Path,
-			name,
-		)
+		referer := r.Referer()
+		if 0 == len(referer) {
+			log.Printf(
+				"REQ from '%s': %s %s %s%s -> %s\n",
+				r.RemoteAddr,
+				r.Method,
+				r.Proto,
+				r.Host,
+				r.URL.Path,
+				name,
+			)
+		} else {
+			log.Printf(
+				"REQ from '%s' (REFERER: '%s'): %s %s %s%s -> %s\n",
+				r.RemoteAddr,
+				referer,
+				r.Method,
+				r.Proto,
+				r.Host,
+				r.URL.Path,
+				name,
+			)
+		}
 		serveFile(w, r, name)
 	}
 }

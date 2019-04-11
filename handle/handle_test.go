@@ -152,19 +152,29 @@ func TestWithReferrers(t *testing.T) {
 }
 
 func TestBasicWithAndWithoutLogging(t *testing.T) {
+	referer := "http://localhost"
+	noReferer := ""
 	testCases := []struct {
 		name     string
 		path     string
 		code     int
+		refer    string
 		contents string
 	}{
-		{"Good base dir", "", ok, tmpIndex},
-		{"Good base index", tmpIndexName, redirect, nothing},
-		{"Good base file", tmpFileName, ok, tmpFile},
-		{"Bad base file", tmpBadName, missing, notFound},
-		{"Good subdir dir", subDir, ok, tmpSubIndex},
-		{"Good subdir index", tmpSubIndexName, redirect, nothing},
-		{"Good subdir file", tmpSubFileName, ok, tmpSubFile},
+		{"Good base dir", "", ok, referer, tmpIndex},
+		{"Good base index", tmpIndexName, redirect, referer, nothing},
+		{"Good base file", tmpFileName, ok, referer, tmpFile},
+		{"Bad base file", tmpBadName, missing, referer, notFound},
+		{"Good subdir dir", subDir, ok, referer, tmpSubIndex},
+		{"Good subdir index", tmpSubIndexName, redirect, referer, nothing},
+		{"Good subdir file", tmpSubFileName, ok, referer, tmpSubFile},
+		{"Good base dir", "", ok, noReferer, tmpIndex},
+		{"Good base index", tmpIndexName, redirect, noReferer, nothing},
+		{"Good base file", tmpFileName, ok, noReferer, tmpFile},
+		{"Bad base file", tmpBadName, missing, noReferer, notFound},
+		{"Good subdir dir", subDir, ok, noReferer, tmpSubIndex},
+		{"Good subdir index", tmpSubIndexName, redirect, noReferer, nothing},
+		{"Good subdir file", tmpSubFileName, ok, noReferer, tmpSubFile},
 	}
 
 	for _, serveFile := range serveFileFuncs {
@@ -173,6 +183,7 @@ func TestBasicWithAndWithoutLogging(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				fullpath := "http://localhost/" + tc.path
 				req := httptest.NewRequest("GET", fullpath, nil)
+				req.Header.Add("Referer", tc.refer)
 				w := httptest.NewRecorder()
 
 				handler(w, req)
