@@ -63,6 +63,7 @@ the path to the configuration file using the command line option
 ('-c', '-config', '--config').
 
 ```yaml
+cors: false
 debug: false
 folder: /web
 host: ""
@@ -72,7 +73,6 @@ show-listing: true
 tls-cert: ""
 tls-key: ""
 url-prefix: ""
-cors: false
 ```
 
 Example configuration with possible alternative values:
