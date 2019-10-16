@@ -61,6 +61,11 @@ func handlerSelector() (handler http.HandlerFunc) {
 	if !config.Get.ShowListing {
 		handler = handle.IgnoreIndex(handler)
 	}
+
+	if config.Get.Cors {
+		handler = handle.AddCorsHeaders(handler)
+	}
+
 	return
 }
 
