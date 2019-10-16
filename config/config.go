@@ -23,6 +23,7 @@ var (
 		TLSKey      string   `yaml:"tls-key"`
 		URLPrefix   string   `yaml:"url-prefix"`
 		Referrers   []string `yaml:"referrers"`
+		Cors		bool     `yaml:cors`
 	}
 )
 
@@ -36,6 +37,7 @@ const (
 	tlsCertKey     = "TLS_CERT"
 	tlsKeyKey      = "TLS_KEY"
 	urlPrefixKey   = "URL_PREFIX"
+	corsKey        = "CORS"
 )
 
 var (
@@ -48,6 +50,7 @@ var (
 	defaultTLSCert     = ""
 	defaultTLSKey      = ""
 	defaultURLPrefix   = ""
+	defaultCors        = false
 )
 
 func init() {
@@ -65,6 +68,7 @@ func setDefaults() {
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
 	Get.URLPrefix = defaultURLPrefix
+	Get.Cors = defaultCors
 }
 
 // Load the configuration file.
@@ -113,6 +117,7 @@ func overrideWithEnvVars() {
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
 	Get.Referrers = envAsStrSlice(referrersKey, Get.Referrers)
+	Get.Cors = envAsBool(corsKey, Get.Cors)
 }
 
 // validate the configuration.
