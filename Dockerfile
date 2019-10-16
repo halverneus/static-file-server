@@ -3,7 +3,7 @@
 ################################################################################
 FROM golang:1.13.1 as builder
 
-ENV VERSION 1.6.6
+ENV VERSION 1.7.6
 ENV BUILD_DIR /build
 
 RUN mkdir -p ${BUILD_DIR}
