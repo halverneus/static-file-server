@@ -61,6 +61,12 @@ func handlerSelector() (handler http.HandlerFunc) {
 	if !config.Get.ShowListing {
 		handler = handle.IgnoreIndex(handler)
 	}
+
+	// If configured, apply wildcard CORS support.
+	if config.Get.Cors {
+		handler = handle.AddCorsWildcardHeaders(handler)
+	}
+
 	return
 }
 

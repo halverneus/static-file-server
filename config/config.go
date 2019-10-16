@@ -14,6 +14,7 @@ import (
 var (
 	// Get the desired configuration value.
 	Get struct {
+		Cors        bool     `yaml:"cors"`
 		Debug       bool     `yaml:"debug"`
 		Folder      string   `yaml:"folder"`
 		Host        string   `yaml:"host"`
@@ -27,6 +28,7 @@ var (
 )
 
 const (
+	corsKey        = "CORS"
 	debugKey       = "DEBUG"
 	folderKey      = "FOLDER"
 	hostKey        = "HOST"
@@ -48,6 +50,7 @@ var (
 	defaultTLSCert     = ""
 	defaultTLSKey      = ""
 	defaultURLPrefix   = ""
+	defaultCors        = false
 )
 
 func init() {
@@ -65,6 +68,7 @@ func setDefaults() {
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
 	Get.URLPrefix = defaultURLPrefix
+	Get.Cors = defaultCors
 }
 
 // Load the configuration file.
@@ -104,6 +108,7 @@ func Log() {
 // overrideWithEnvVars the default values and the configuration file values.
 func overrideWithEnvVars() {
 	// Assign envvars, if set.
+	Get.Cors = envAsBool(corsKey, Get.Cors)
 	Get.Debug = envAsBool(debugKey, Get.Debug)
 	Get.Folder = envAsStr(folderKey, Get.Folder)
 	Get.Host = envAsStr(hostKey, Get.Host)

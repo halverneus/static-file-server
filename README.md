@@ -14,6 +14,9 @@ Install from any of the following locations:
 Default values are shown with the associated environment variable.
 
 ```bash
+# Enables resource access from any domain.
+CORS=false
+
 # Enable debugging for troubleshooting. If set to 'true' this prints extra
 # information during execution. IMPORTANT NOTE: The configuration summary is
 # printed to stdout while logs generated during execution are printed to stderr.
@@ -60,6 +63,7 @@ the path to the configuration file using the command line option
 ('-c', '-config', '--config').
 
 ```yaml
+cors: false
 debug: false
 folder: /web
 host: ""

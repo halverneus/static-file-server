@@ -33,6 +33,10 @@ DEPENDENCIES
     None... not even libc!
 
 ENVIRONMENT VARIABLES
+    CORS
+        When set to 'true' it enables resource access from any domain. All
+        responses will include the headers 'Access-Control-Allow-Origin' and
+        'Access-Control-Allow-Headers' with a wildcard value ('*').
     DEBUG
         When set to 'true' enables additional logging, including the
         configuration used and an access log for each request. IMPORTANT NOTE:
@@ -85,6 +89,7 @@ CONFIGURATION FILE
 
     Example config.yml with defaults:
     ----------------------------------------------------------------------------
+    cors: false
     debug: false
     folder: /web
     host: ""

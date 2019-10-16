@@ -109,6 +109,16 @@ func IgnoreIndex(serve http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// AddCorsWildcardHeaders wraps an HTTP request to notify client browsers that
+// resources should be allowed to be retrieved by any other domain.
+func AddCorsWildcardHeaders(serve http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		serve(w, r)
+	}
+}
+
 // Listening function for serving the handler function.
 func Listening() ListenerFunc {
 	return func(binding string, handler http.HandlerFunc) error {
