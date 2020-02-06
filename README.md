@@ -1,6 +1,7 @@
 # static-file-server
 
 ## Introduction
+
 Tiny, simple static file server using environment variables for configuration.
 Install from any of the following locations:
 
