@@ -1,9 +1,9 @@
 ################################################################################
 ## GO BUILDER
 ################################################################################
-FROM golang:1.14.2 as builder
+FROM golang:1.15.0 as builder
 
-ENV VERSION 1.8.0
+ENV VERSION 1.8.1
 ENV BUILD_DIR /build
 
 RUN mkdir -p ${BUILD_DIR}
@@ -36,5 +36,5 @@ LABEL life.apets.vendor="Halverneus" \
     life.apets.url="https://github.com/halverneus/static-file-server" \
     life.apets.name="Static File Server" \
     life.apets.description="A tiny static file server" \
-    life.apets.version="v1.8.0" \
+    life.apets.version="v1.8.1" \
     life.apets.schema-version="1.0"
