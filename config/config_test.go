@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -160,27 +161,33 @@ func TestValidate(t *testing.T) {
 		cert    string
 		key     string
 		prefix  string
+		minTLS  string
 		isError bool
 	}{
-		{"Valid paths w/prefix", validPath, validPath, prefix, false},
-		{"Valid paths wo/prefix", validPath, validPath, empty, false},
-		{"Empty paths w/prefix", empty, empty, prefix, false},
-		{"Empty paths wo/prefix", empty, empty, empty, false},
-		{"Mixed paths w/prefix", empty, validPath, prefix, true},
-		{"Alt mixed paths w/prefix", validPath, empty, prefix, true},
-		{"Mixed paths wo/prefix", empty, validPath, empty, true},
-		{"Alt mixed paths wo/prefix", validPath, empty, empty, true},
-		{"Invalid cert w/prefix", invalidPath, validPath, prefix, true},
-		{"Invalid key w/prefix", validPath, invalidPath, prefix, true},
-		{"Invalid cert & key w/prefix", invalidPath, invalidPath, prefix, true},
-		{"Prefix missing leading /", empty, empty, "my/prefix", true},
-		{"Prefix with trailing /", empty, empty, "/my/prefix/", true},
+		{"Valid paths w/prefix", validPath, validPath, prefix, "", false},
+		{"Valid paths wo/prefix", validPath, validPath, empty, "", false},
+		{"Empty paths w/prefix", empty, empty, prefix, "", false},
+		{"Empty paths wo/prefix", empty, empty, empty, "", false},
+		{"Mixed paths w/prefix", empty, validPath, prefix, "", true},
+		{"Alt mixed paths w/prefix", validPath, empty, prefix, "", true},
+		{"Mixed paths wo/prefix", empty, validPath, empty, "", true},
+		{"Alt mixed paths wo/prefix", validPath, empty, empty, "", true},
+		{"Invalid cert w/prefix", invalidPath, validPath, prefix, "", true},
+		{"Invalid key w/prefix", validPath, invalidPath, prefix, "", true},
+		{"Invalid cert & key w/prefix", invalidPath, invalidPath, prefix, "", true},
+		{"Prefix missing leading /", empty, empty, "my/prefix", "", true},
+		{"Prefix with trailing /", empty, empty, "/my/prefix/", "", true},
+		{"Valid paths w/min ok TLS", validPath, validPath, prefix, "tls11", false},
+		{"Valid paths w/min bad TLS", validPath, validPath, prefix, "bad", true},
+		{"Empty paths w/min ok TLS", empty, empty, prefix, "tls11", true},
+		{"Empty paths w/min bad TLS", empty, empty, prefix, "bad", true},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			Get.TLSCert = tc.cert
 			Get.TLSKey = tc.key
+			Get.TLSMinVersStr = tc.minTLS
 			Get.URLPrefix = tc.prefix
 			err := validate()
 			hasError := nil != err
@@ -459,5 +466,44 @@ func TestStrAsBool(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestTlsMinVersAsUint16(t *testing.T) {
+	testCases := []struct {
+		name    string
+		value   string
+		result  uint16
+		isError bool
+	}{
+		{"Empty value", "", 0, true},
+		{"Valid TLS1.0", "TLS10", tls.VersionTLS10, false},
+		{"Valid TLS1.1", "tls11", tls.VersionTLS11, false},
+		{"Valid TLS1.2", "tls12", tls.VersionTLS12, false},
+		{"Valid TLS1.3", "tLS13", tls.VersionTLS13, false},
+		{"Invalid TLS1.4", "tls14", 0, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := tlsMinVersAsUint16(tc.value)
+			if result != tc.result {
+				t.Errorf(
+					"Expected %d for %s but got %d",
+					tc.result, tc.value, result,
+				)
+			}
+			if tc.isError && nil == err {
+				t.Errorf(
+					"Expected error for %s but got no error",
+					tc.value,
+				)
+			} else if !tc.isError && nil != err {
+				t.Errorf(
+					"Expected no error for %s but got %v",
+					tc.value, err,
+				)
+			}
+		})
 	}
 }

@@ -76,6 +76,7 @@ func listenerSelector() (listener handle.ListenerFunc) {
 	// Serve files over HTTP or HTTPS based on paths to TLS files being
 	// provided.
 	if 0 < len(config.Get.TLSCert) {
+		handle.SetMinimumTLSVersion(config.Get.TLSMinVers)
 		listener = handle.TLSListening(
 			config.Get.TLSCert,
 			config.Get.TLSKey,
