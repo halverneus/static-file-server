@@ -178,6 +178,8 @@ func TestValidate(t *testing.T) {
 		{"Prefix missing leading /", empty, empty, "my/prefix", "", true},
 		{"Prefix with trailing /", empty, empty, "/my/prefix/", "", true},
 		{"Valid paths w/min ok TLS", validPath, validPath, prefix, "tls11", false},
+		{"Valid paths w/min ok TLS", validPath, validPath, prefix, "tls12", false},
+		{"Valid paths w/min ok TLS", validPath, validPath, prefix, "tls13", false},
 		{"Valid paths w/min bad TLS", validPath, validPath, prefix, "bad", true},
 		{"Empty paths w/min ok TLS", empty, empty, prefix, "tls11", true},
 		{"Empty paths w/min bad TLS", empty, empty, prefix, "bad", true},

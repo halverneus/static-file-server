@@ -83,7 +83,7 @@ func Load(filename string) (err error) {
 	// If no filename provided, assign envvars.
 	if filename == "" {
 		overrideWithEnvVars()
-		return
+		return validate()
 	}
 
 	// Read contents from configuration file.
@@ -160,6 +160,19 @@ func validate() error {
 			); nil != err {
 				return err
 			}
+		}
+
+		// For logging minimum TLS version being used while debugging, backfill
+		// the TLSMinVersStr field.
+		switch Get.TLSMinVers {
+		case tls.VersionTLS10:
+			Get.TLSMinVersStr = "TLS1.0"
+		case tls.VersionTLS11:
+			Get.TLSMinVersStr = "TLS1.1"
+		case tls.VersionTLS12:
+			Get.TLSMinVersStr = "TLS1.2"
+		case tls.VersionTLS13:
+			Get.TLSMinVersStr = "TLS1.3"
 		}
 	} else {
 		if 0 < len(Get.TLSMinVersStr) {
