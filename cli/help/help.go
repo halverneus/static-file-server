@@ -75,6 +75,10 @@ ENVIRONMENT VARIABLES
         Path to the TLS key file to serve files using HTTPS. If supplied then
         TLS_CERT must also be supplied. If not supplied, contents will be served
         via HTTPS
+    TLS_MIN_VERS
+        The minimum TLS version to use. If not supplied, defaults to TLS1.0.
+        Acceptable values are 'TLS10', 'TLS11', 'TLS12' and 'TLS13' for TLS1.0,
+        TLS1.1, TLS1.2 and TLS1.3, respectively. Values are not case-sensitive.
     URL_PREFIX
         The prefix to use in the URL path. If supplied, then the prefix must
         start with a forward-slash and NOT end with a forward-slash. If not
@@ -98,6 +102,7 @@ CONFIGURATION FILE
     show-listing: true
     tls-cert: ""
     tls-key: ""
+    tls-min-vers: ""
     url-prefix: ""
     ----------------------------------------------------------------------------
 
@@ -150,6 +155,7 @@ USAGE
         export PORT=443
         export TLS_CERT=/etc/server/my.machine.crt
         export TLS_KEY=/etc/server/my.machine.key
+        export TLS_MIN_VERS=TLS12
         static-file-server
             Retrieve with: wget https://my.machine/my.file
 

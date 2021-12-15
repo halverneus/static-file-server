@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/tls"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,16 +16,18 @@ import (
 var (
 	// Get the desired configuration value.
 	Get struct {
-		Cors        bool     `yaml:"cors"`
-		Debug       bool     `yaml:"debug"`
-		Folder      string   `yaml:"folder"`
-		Host        string   `yaml:"host"`
-		Port        uint16   `yaml:"port"`
-		ShowListing bool     `yaml:"show-listing"`
-		TLSCert     string   `yaml:"tls-cert"`
-		TLSKey      string   `yaml:"tls-key"`
-		URLPrefix   string   `yaml:"url-prefix"`
-		Referrers   []string `yaml:"referrers"`
+		Cors          bool     `yaml:"cors"`
+		Debug         bool     `yaml:"debug"`
+		Folder        string   `yaml:"folder"`
+		Host          string   `yaml:"host"`
+		Port          uint16   `yaml:"port"`
+		ShowListing   bool     `yaml:"show-listing"`
+		TLSCert       string   `yaml:"tls-cert"`
+		TLSKey        string   `yaml:"tls-key"`
+		TLSMinVers    uint16   `yaml:"-"`
+		TLSMinVersStr string   `yaml:"tls-min-vers"`
+		URLPrefix     string   `yaml:"url-prefix"`
+		Referrers     []string `yaml:"referrers"`
 	}
 )
 
@@ -37,6 +41,7 @@ const (
 	showListingKey = "SHOW_LISTING"
 	tlsCertKey     = "TLS_CERT"
 	tlsKeyKey      = "TLS_KEY"
+	tlsMinVersKey  = "TLS_MIN_VERS"
 	urlPrefixKey   = "URL_PREFIX"
 )
 
@@ -49,6 +54,7 @@ var (
 	defaultShowListing = true
 	defaultTLSCert     = ""
 	defaultTLSKey      = ""
+	defaultTLSMinVers  = ""
 	defaultURLPrefix   = ""
 	defaultCors        = false
 )
@@ -67,6 +73,7 @@ func setDefaults() {
 	Get.ShowListing = defaultShowListing
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
+	Get.TLSMinVersStr = defaultTLSMinVers
 	Get.URLPrefix = defaultURLPrefix
 	Get.Cors = defaultCors
 }
@@ -74,9 +81,9 @@ func setDefaults() {
 // Load the configuration file.
 func Load(filename string) (err error) {
 	// If no filename provided, assign envvars.
-	if "" == filename {
+	if filename == "" {
 		overrideWithEnvVars()
-		return
+		return validate()
 	}
 
 	// Read contents from configuration file.
@@ -116,6 +123,7 @@ func overrideWithEnvVars() {
 	Get.ShowListing = envAsBool(showListingKey, Get.ShowListing)
 	Get.TLSCert = envAsStr(tlsCertKey, Get.TLSCert)
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
+	Get.TLSMinVersStr = envAsStr(tlsMinVersKey, Get.TLSMinVersStr)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
 	Get.Referrers = envAsStrSlice(referrersKey, Get.Referrers)
 }
@@ -123,8 +131,9 @@ func overrideWithEnvVars() {
 // validate the configuration.
 func validate() error {
 	// If HTTPS is to be used, verify both TLS_* environment variables are set.
+	useTLS := false
 	if 0 < len(Get.TLSCert) || 0 < len(Get.TLSKey) {
-		if 0 == len(Get.TLSCert) || 0 == len(Get.TLSKey) {
+		if len(Get.TLSCert) == 0 || len(Get.TLSKey) == 0 {
 			msg := "if value for either 'TLS_CERT' or 'TLS_KEY' is set then " +
 				"then value for the other must also be set (values are " +
 				"currently '%s' and '%s', respectively)"
@@ -132,11 +141,43 @@ func validate() error {
 		}
 		if _, err := os.Stat(Get.TLSCert); nil != err {
 			msg := "value of TLS_CERT is set with filename '%s' that returns %v"
-			return fmt.Errorf(msg, err)
+			return fmt.Errorf(msg, Get.TLSCert, err)
 		}
 		if _, err := os.Stat(Get.TLSKey); nil != err {
 			msg := "value of TLS_KEY is set with filename '%s' that returns %v"
-			return fmt.Errorf(msg, err)
+			return fmt.Errorf(msg, Get.TLSKey, err)
+		}
+		useTLS = true
+	}
+
+	// Verify TLS_MIN_VERS is only (optionally) set if TLS is to be used.
+	Get.TLSMinVers = tls.VersionTLS10
+	if useTLS {
+		if 0 < len(Get.TLSMinVersStr) {
+			var err error
+			if Get.TLSMinVers, err = tlsMinVersAsUint16(
+				Get.TLSMinVersStr,
+			); nil != err {
+				return err
+			}
+		}
+
+		// For logging minimum TLS version being used while debugging, backfill
+		// the TLSMinVersStr field.
+		switch Get.TLSMinVers {
+		case tls.VersionTLS10:
+			Get.TLSMinVersStr = "TLS1.0"
+		case tls.VersionTLS11:
+			Get.TLSMinVersStr = "TLS1.1"
+		case tls.VersionTLS12:
+			Get.TLSMinVersStr = "TLS1.2"
+		case tls.VersionTLS13:
+			Get.TLSMinVersStr = "TLS1.3"
+		}
+	} else {
+		if 0 < len(Get.TLSMinVersStr) {
+			msg := "value for 'TLS_MIN_VERS' is set but 'TLS_CERT' and 'TLS_KEY' are not"
+			return errors.New(msg)
 		}
 	}
 
@@ -154,7 +195,7 @@ func validate() error {
 
 // envAsStr returns the value of the environment variable as a string if set.
 func envAsStr(key, fallback string) string {
-	if value := os.Getenv(key); "" != value {
+	if value := os.Getenv(key); value != "" {
 		return value
 	}
 	return fallback
@@ -163,7 +204,7 @@ func envAsStr(key, fallback string) string {
 // envAsStrSlice returns the value of the environment variable as a slice of
 // strings if set.
 func envAsStrSlice(key string, fallback []string) []string {
-	if value := os.Getenv(key); "" != value {
+	if value := os.Getenv(key); value != "" {
 		return strings.Split(value, ",")
 	}
 	return fallback
@@ -174,7 +215,7 @@ func envAsUint16(key string, fallback uint16) uint16 {
 	// Retrieve the string value of the environment variable. If not set,
 	// fallback is used.
 	valueStr := os.Getenv(key)
-	if "" == valueStr {
+	if valueStr == "" {
 		return fallback
 	}
 
@@ -198,7 +239,7 @@ func envAsBool(key string, fallback bool) bool {
 	// Retrieve the string value of the environment variable. If not set,
 	// fallback is used.
 	valueStr := os.Getenv(key)
-	if "" == valueStr {
+	if valueStr == "" {
 		return fallback
 	}
 
@@ -225,8 +266,26 @@ func strAsBool(value string) (result bool, err error) {
 		result = true
 	default:
 		result = false
-		msg := "Unknown conversion from string to bool for value '%s'"
+		msg := "unknown conversion from string to bool for value '%s'"
 		err = fmt.Errorf(msg, value)
+	}
+	return
+}
+
+// tlsMinVersAsUint16 converts the intent of the passed value into an
+// enumeration for the crypto/tls package.
+func tlsMinVersAsUint16(value string) (result uint16, err error) {
+	switch strings.ToLower(value) {
+	case "tls10":
+		result = tls.VersionTLS10
+	case "tls11":
+		result = tls.VersionTLS11
+	case "tls12":
+		result = tls.VersionTLS12
+	case "tls13":
+		result = tls.VersionTLS13
+	default:
+		err = fmt.Errorf("unknown value for TLS_MIN_VERS: %s", value)
 	}
 	return
 }

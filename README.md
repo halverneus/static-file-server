@@ -1,5 +1,9 @@
 # static-file-server
 
+<a href="https://github.com/sponsors/halverneus">
+<img src="img/sponsor.svg" />
+</a>
+
 ## Introduction
 
 Tiny, simple static file server using environment variables for configuration.
@@ -47,6 +51,12 @@ URL_PREFIX=
 TLS_CERT=
 TLS_KEY=
 
+# If TLS certificates are set then the minimum TLS version may also be set. If
+# the value isn't set then the default minimum TLS version is 1.0. Allowed
+# values include "TLS10", "TLS11", "TLS12" and "TLS13" for TLS1.0, TLS1.1,
+# TLS1.2 and TLS1.3, respectively. The value is not case-sensitive.
+TLS_MIN_VERS=
+
 # List of accepted HTTP referrers. Return 403 if HTTP header `Referer` does not
 # match prefixes provided in the list.
 # Examples:
@@ -73,6 +83,7 @@ referrers: []
 show-listing: true
 tls-cert: ""
 tls-key: ""
+tls-min-vers: ""
 url-prefix: ""
 ```
 

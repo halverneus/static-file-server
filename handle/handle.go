@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,13 +11,45 @@ import (
 var (
 	// These assignments are for unit testing.
 	listenAndServe    = http.ListenAndServe
-	listenAndServeTLS = http.ListenAndServeTLS
+	listenAndServeTLS = defaultListenAndServeTLS
 	setHandler        = http.HandleFunc
 )
 
 var (
-	server http.Server
+	// Server options to be set prior to calling the listening function.
+	// minTLSVersion is the minimum allowed TLS version to be used by the
+	// server.
+	minTLSVersion uint16 = tls.VersionTLS10
 )
+
+// defaultListenAndServeTLS is the default implementation of the listening
+// function for serving with TLS enabled. This is, effectively, a copy from
+// the standard library but with the ability to set the minimum TLS version.
+func defaultListenAndServeTLS(
+	binding, certFile, keyFile string, handler http.Handler,
+) error {
+	if handler == nil {
+		handler = http.DefaultServeMux
+	}
+	server := &http.Server{
+		Addr:    binding,
+		Handler: handler,
+		TLSConfig: &tls.Config{
+			MinVersion: minTLSVersion,
+		},
+	}
+	return server.ListenAndServeTLS(certFile, keyFile)
+}
+
+// SetMinimumTLSVersion to be used by the server.
+func SetMinimumTLSVersion(version uint16) {
+	if version < tls.VersionTLS10 {
+		version = tls.VersionTLS10
+	} else if version > tls.VersionTLS13 {
+		version = tls.VersionTLS13
+	}
+	minTLSVersion = version
+}
 
 // ListenerFunc accepts the {hostname:port} binding string required by HTTP
 // listeners and the handler (router) function and returns any errors that
@@ -50,7 +83,7 @@ func WithReferrers(serveFile FileServerFunc, referrers []string) FileServerFunc 
 func WithLogging(serveFile FileServerFunc) FileServerFunc {
 	return func(w http.ResponseWriter, r *http.Request, name string) {
 		referer := r.Referer()
-		if 0 == len(referer) {
+		if len(referer) == 0 {
 			log.Printf(
 				"REQ from '%s': %s %s %s%s -> %s\n",
 				r.RemoteAddr,
@@ -139,7 +172,7 @@ func TLSListening(tlsCert, tlsKey string) ListenerFunc {
 // passed list of referrers.
 func validReferrer(s []string, e string) bool {
 	// Whitelisted referer list is empty. All requests are allowed.
-	if 0 == len(s) {
+	if len(s) == 0 {
 		return true
 	}
 

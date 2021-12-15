@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"crypto/tls"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -82,6 +83,28 @@ func setup() (err error) {
 
 func teardown() (err error) {
 	return os.RemoveAll("tmp")
+}
+
+func TestSetMinimumTLSVersion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		value    uint16
+		expected uint16
+	}{
+		{"Too low", tls.VersionTLS10 - 1, tls.VersionTLS10},
+		{"Lower bounds", tls.VersionTLS10, tls.VersionTLS10},
+		{"Upper bounds", tls.VersionTLS13, tls.VersionTLS13},
+		{"Too high", tls.VersionTLS13 + 1, tls.VersionTLS13},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			SetMinimumTLSVersion(tc.value)
+			if tc.expected != minTLSVersion {
+				t.Errorf("Expected %d but got %d", tc.expected, minTLSVersion)
+			}
+		})
+	}
 }
 
 func TestWithReferrers(t *testing.T) {
