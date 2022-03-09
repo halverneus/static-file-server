@@ -4,6 +4,7 @@
 FROM golang:1.17.8 as builder
 
 ENV VERSION 1.8.6
+ENV CGO_ENABLED 0
 ENV BUILD_DIR /build
 
 RUN mkdir -p ${BUILD_DIR}
@@ -14,7 +15,7 @@ RUN go mod download
 COPY . .
 
 RUN go test -cover ./...
-RUN CGO_ENABLED=0 go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o /serve /build/bin/serve
+RUN go build -a -tags netgo -installsuffix netgo -ldflags "-X github.com/halverneus/static-file-server/cli/version.version=${VERSION}" -o /serve /build/bin/serve
 
 RUN adduser --system --no-create-home --uid 1000 --shell /usr/sbin/nologin static
 
