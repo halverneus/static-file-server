@@ -28,6 +28,7 @@ var (
 		TLSMinVersStr string   `yaml:"tls-min-vers"`
 		URLPrefix     string   `yaml:"url-prefix"`
 		Referrers     []string `yaml:"referrers"`
+		AccessKey     string   `yaml:"accessKey"`
 	}
 )
 
@@ -43,6 +44,7 @@ const (
 	tlsKeyKey      = "TLS_KEY"
 	tlsMinVersKey  = "TLS_MIN_VERS"
 	urlPrefixKey   = "URL_PREFIX"
+	accessKeyKey   = "ACCESS_KEY"
 )
 
 var (
@@ -57,6 +59,7 @@ var (
 	defaultTLSMinVers  = ""
 	defaultURLPrefix   = ""
 	defaultCors        = false
+	defaultAccessKey   = ""
 )
 
 func init() {
@@ -76,6 +79,7 @@ func setDefaults() {
 	Get.TLSMinVersStr = defaultTLSMinVers
 	Get.URLPrefix = defaultURLPrefix
 	Get.Cors = defaultCors
+	Get.AccessKey = defaultAccessKey
 }
 
 // Load the configuration file.
@@ -126,6 +130,7 @@ func overrideWithEnvVars() {
 	Get.TLSMinVersStr = envAsStr(tlsMinVersKey, Get.TLSMinVersStr)
 	Get.URLPrefix = envAsStr(urlPrefixKey, Get.URLPrefix)
 	Get.Referrers = envAsStrSlice(referrersKey, Get.Referrers)
+	Get.AccessKey = envAsStr(accessKeyKey, Get.AccessKey)
 }
 
 // validate the configuration.
