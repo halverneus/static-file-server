@@ -67,6 +67,11 @@ func handlerSelector() (handler http.HandlerFunc) {
 		handler = handle.AddCorsWildcardHeaders(handler)
 	}
 
+	// If configured, apply key code access control.
+	if "" != config.Get.AccessKey {
+		handler = handle.AddAccessKey(handler, config.Get.AccessKey)
+	}
+
 	return
 }
 

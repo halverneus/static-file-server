@@ -64,6 +64,16 @@ TLS_MIN_VERS=
 #   To accept missing referrer header, add a blank entry (start comma):
 #   'REFERRERS=,http://localhost,https://another.name'
 REFERRERS=
+
+# Use key / code parameter in the request URL for access control. The code is
+# computed by requested PATH and your key.
+# Example:
+#   ACCESS_KEY=username
+#   To access your file, either access:
+#   http://$HOST:$PORT/my/place/my.file?key=username
+#   or access (md5sum of "/my/place/my.fileusername"):
+#   http://$HOST:$PORT/my/place/my.file?code=44356A355E89D9EE7B2D5687E48024B0
+ACCESS_KEY=
 ```
 
 ### YAML Configuration File
@@ -85,6 +95,7 @@ tls-cert: ""
 tls-key: ""
 tls-min-vers: ""
 url-prefix: ""
+access-key: ""
 ```
 
 Example configuration with possible alternative values:
