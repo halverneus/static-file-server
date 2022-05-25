@@ -28,7 +28,7 @@ var (
 		TLSMinVersStr string   `yaml:"tls-min-vers"`
 		URLPrefix     string   `yaml:"url-prefix"`
 		Referrers     []string `yaml:"referrers"`
-		AccessKey     string   `yaml:"accessKey"`
+		AccessKey     string   `yaml:"access-key"`
 	}
 )
 

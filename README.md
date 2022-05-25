@@ -95,7 +95,7 @@ tls-cert: ""
 tls-key: ""
 tls-min-vers: ""
 url-prefix: ""
-access_key: ""
+access-key: ""
 ```
 
 Example configuration with possible alternative values:
