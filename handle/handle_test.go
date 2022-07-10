@@ -1,8 +1,10 @@
 package handle
 
 import (
+	"crypto/md5"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -307,6 +309,98 @@ func TestIgnoreIndex(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				fullpath := "http://localhost/" + tc.path
+				req := httptest.NewRequest("GET", fullpath, nil)
+				w := httptest.NewRecorder()
+
+				handler(w, req)
+
+				resp := w.Result()
+				body, err := ioutil.ReadAll(resp.Body)
+				if nil != err {
+					t.Errorf("While reading body got %v", err)
+				}
+				contents := string(body)
+				if tc.code != resp.StatusCode {
+					t.Errorf(
+						"While retrieving %s expected status code of %d but got %d",
+						fullpath, tc.code, resp.StatusCode,
+					)
+				}
+				if tc.contents != contents {
+					t.Errorf(
+						"While retrieving %s expected contents '%s' but got '%s'",
+						fullpath, tc.contents, contents,
+					)
+				}
+			})
+		}
+	}
+}
+
+func TestAddAccessKey(t *testing.T) {
+	// Prepare testing data.
+	accessKey := "my-access-key"
+
+	code := func(path, key string) string {
+		data := []byte("/" + path + key)
+		fmt.Printf("TEST: '%s'\n", data)
+		return fmt.Sprintf("%X", md5.Sum(data))
+	}
+
+	// Define test cases.
+	testCases := []struct {
+		name     string
+		path     string
+		key      string
+		value    string
+		code     int
+		contents string
+	}{
+		{
+			"Good base file with code", tmpFileName,
+			"code", code(tmpFileName, accessKey),
+			ok, tmpFile,
+		},
+		{
+			"Good base file with key", tmpFileName,
+			"key", accessKey,
+			ok, tmpFile,
+		},
+		{
+			"Bad base file with code", tmpBadName,
+			"code", code(tmpBadName, accessKey),
+			missing, notFound,
+		},
+		{
+			"Bad base file with key", tmpBadName,
+			"key", accessKey,
+			missing, notFound,
+		},
+		{
+			"Good base file with no code or key", tmpFileName,
+			"my", "value",
+			missing, notFound,
+		},
+		{
+			"Good base file with bad code", tmpFileName,
+			"code", code(tmpFileName, "bad-access-key"),
+			missing, notFound,
+		},
+		{
+			"Good base file with bad key", tmpFileName,
+			"key", "bad-access-key",
+			missing, notFound,
+		},
+	}
+
+	for _, serveFile := range serveFileFuncs {
+		handler := AddAccessKey(Basic(serveFile, baseDir), accessKey)
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				fullpath := fmt.Sprintf(
+					"http://localhost/%s?%s=%s",
+					tc.path, tc.key, tc.value,
+				)
 				req := httptest.NewRequest("GET", fullpath, nil)
 				w := httptest.NewRecorder()
 

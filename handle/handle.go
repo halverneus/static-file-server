@@ -1,8 +1,8 @@
 package handle
 
 import (
-	"crypto/tls"
 	"crypto/md5"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -153,18 +153,18 @@ func AddCorsWildcardHeaders(serve http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Access Control through url parameters. The access key is set by ACCESS_KEY.
-// md5sum is computed by queried path + access key
+// AddAccessKey provides Access Control through url parameters. The access key
+// is set by ACCESS_KEY. md5sum is computed by queried path + access key
 // (e.g. "/my/file" + ACCESS_KEY)
 func AddAccessKey(serve http.HandlerFunc, accessKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get key or md5sum from this access.
 		keys, keyOk := r.URL.Query()["key"]
 		var code string
-    	if !keyOk || len(keys[0]) < 1 {
+		if !keyOk || len(keys[0]) < 1 {
 			// In case a code is provided
 			codes, codeOk := r.URL.Query()["code"]
-    		if !codeOk || len(codes[0]) < 1 {
+			if !codeOk || len(codes[0]) < 1 {
 				http.NotFound(w, r)
 				return
 			}
@@ -180,7 +180,7 @@ func AddAccessKey(serve http.HandlerFunc, accessKey string) http.HandlerFunc {
 		localData := []byte(r.URL.Path + accessKey)
 		hash := md5.Sum(localData)
 		localCode := fmt.Sprintf("%X", hash)
-		
+
 		// Compare the two.
 		if code != localCode {
 			http.NotFound(w, r)
