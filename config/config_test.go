@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 func TestLoad(t *testing.T) {
