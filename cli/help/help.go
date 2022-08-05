@@ -61,6 +61,12 @@ ENVIRONMENT VARIABLES
         Examples:
           REFERRERS='http://localhost,https://some.site,http://other.site:8080'
           REFERRERS=',http://localhost,https://some.site,http://other.site:8080'
+    ALLOW_INDEX
+        When set to 'true' the index.html file in the folder(not include the 
+        sub folders) will be served. And the file list will not be served. 
+        For example, if the client requests  'http://127.0.0.1/' the 'index.html'
+        file in the root of the directory being served is returned. Default value
+        is 'true'.
     SHOW_LISTING
         Automatically serve the index file for the directory if requested. For
         example, if the client requests 'http://127.0.0.1/' the 'index.html'
@@ -161,12 +167,22 @@ USAGE
 
         export FOLDER=/var/www
         export PORT=80
+        export ALLOW_INDEX=true   # Default behavior
         export SHOW_LISTING=true  # Default behavior
         static-file-server
             Retrieve 'index.html' with: wget http://my.machine/
 
         export FOLDER=/var/www
         export PORT=80
+        export ALLOW_INDEX=true    # Default behavior
+        export SHOW_LISTING=false
+        static-file-server
+            Retrieve 'index.html' with: wget http://my.machine/
+            Returns 'NOT FOUND': wget http://my.machine/dir/
+
+        export FOLDER=/var/www
+        export PORT=80
+        export ALLOW_INDEX=false
         export SHOW_LISTING=false
         static-file-server
             Returns 'NOT FOUND': wget http://my.machine/

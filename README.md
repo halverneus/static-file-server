@@ -34,8 +34,11 @@ HOST=
 # If assigned, must be a valid port number.
 PORT=8080
 
-# Automatically serve the index file for a given directory (default). If set to
-# 'false', URLs ending with a '/' will return 'NOT FOUND'.
+# When set to 'true' the index.html file in the folder will be served. And
+# the file list will not be served.
+ALLOW_INDEX=true
+
+# Automatically serve the index of file list for a given directory (default).
 SHOW_LISTING=true
 
 # Folder with the content to serve.

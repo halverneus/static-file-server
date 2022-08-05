@@ -21,6 +21,7 @@ var (
 		Folder        string   `yaml:"folder"`
 		Host          string   `yaml:"host"`
 		Port          uint16   `yaml:"port"`
+		AllowIndex    bool     `yaml:"allow-index"`
 		ShowListing   bool     `yaml:"show-listing"`
 		TLSCert       string   `yaml:"tls-cert"`
 		TLSKey        string   `yaml:"tls-key"`
@@ -39,6 +40,7 @@ const (
 	hostKey        = "HOST"
 	portKey        = "PORT"
 	referrersKey   = "REFERRERS"
+	allowIndexKey  = "ALLOW_INDEX"
 	showListingKey = "SHOW_LISTING"
 	tlsCertKey     = "TLS_CERT"
 	tlsKeyKey      = "TLS_KEY"
@@ -53,6 +55,7 @@ var (
 	defaultHost        = ""
 	defaultPort        = uint16(8080)
 	defaultReferrers   = []string{}
+	defaultAllowIndex  = true
 	defaultShowListing = true
 	defaultTLSCert     = ""
 	defaultTLSKey      = ""
@@ -73,6 +76,7 @@ func setDefaults() {
 	Get.Host = defaultHost
 	Get.Port = defaultPort
 	Get.Referrers = defaultReferrers
+	Get.AllowIndex = defaultAllowIndex
 	Get.ShowListing = defaultShowListing
 	Get.TLSCert = defaultTLSCert
 	Get.TLSKey = defaultTLSKey
@@ -124,6 +128,7 @@ func overrideWithEnvVars() {
 	Get.Folder = envAsStr(folderKey, Get.Folder)
 	Get.Host = envAsStr(hostKey, Get.Host)
 	Get.Port = envAsUint16(portKey, Get.Port)
+	Get.AllowIndex = envAsBool(allowIndexKey, Get.AllowIndex)
 	Get.ShowListing = envAsBool(showListingKey, Get.ShowListing)
 	Get.TLSCert = envAsStr(tlsCertKey, Get.TLSCert)
 	Get.TLSKey = envAsStr(tlsKeyKey, Get.TLSKey)
