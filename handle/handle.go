@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path"
 	"strings"
 )
 
@@ -127,6 +129,23 @@ func Prefix(serveFile FileServerFunc, folder, urlPrefix string) http.HandlerFunc
 			return
 		}
 		serveFile(w, r, folder+strings.TrimPrefix(r.URL.Path, urlPrefix))
+	}
+}
+
+// PreventListings returns a function that prevents listing of directories but
+// still allows index.html to be served.
+func PreventListings(serve http.HandlerFunc, folder string, urlPrefix string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			// If the directory does not contain an index.html file, then
+			// return 'NOT FOUND' to prevent listing of the directory.
+			stat, err := os.Stat(path.Join(folder, strings.TrimPrefix(r.URL.Path, urlPrefix), "index.html"))
+			if err != nil || (err == nil && !stat.Mode().IsRegular()) {
+				http.NotFound(w, r)
+				return
+			}
+		}
+		serve(w, r)
 	}
 }
 

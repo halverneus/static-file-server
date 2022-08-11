@@ -82,6 +82,7 @@ func TestOverrideWithEnvvars(t *testing.T) {
 	testFolder := "/my/directory"
 	testHost := "apets.life"
 	testPort := uint16(666)
+	testAllowIndex := false
 	testShowListing := false
 	testTLSCert := "my.pem"
 	testTLSKey := "my.key"
@@ -92,6 +93,7 @@ func TestOverrideWithEnvvars(t *testing.T) {
 	os.Setenv(folderKey, testFolder)
 	os.Setenv(hostKey, testHost)
 	os.Setenv(portKey, strconv.Itoa(int(testPort)))
+	os.Setenv(allowIndexKey, fmt.Sprintf("%t", testAllowIndex))
 	os.Setenv(showListingKey, fmt.Sprintf("%t", testShowListing))
 	os.Setenv(tlsCertKey, testTLSCert)
 	os.Setenv(tlsKeyKey, testTLSKey)

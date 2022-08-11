@@ -59,9 +59,12 @@ func handlerSelector() (handler http.HandlerFunc) {
 
 	// Determine whether index files should hidden.
 	if !config.Get.ShowListing {
-		handler = handle.IgnoreIndex(handler)
+		if config.Get.AllowIndex {
+			handler = handle.PreventListings(handler, config.Get.Folder, config.Get.URLPrefix)
+		} else {
+			handler = handle.IgnoreIndex(handler)
+		}
 	}
-
 	// If configured, apply wildcard CORS support.
 	if config.Get.Cors {
 		handler = handle.AddCorsWildcardHeaders(handler)

@@ -27,6 +27,8 @@ var (
 	tmpSubDeepIndexName = "sub/deep/index.html"
 	tmpSubDeepFileName  = "sub/deep/file.txt"
 	tmpSubDeepBadName   = "sub/deep/bad.txt"
+	tmpNoIndexDir       = "noindex/"
+	tmpNoIndexName      = "noindex/noindex.txt"
 
 	tmpIndex        = "Space: the final frontier"
 	tmpFile         = "These are the voyages of the starship Enterprise."
@@ -48,6 +50,7 @@ var (
 		baseDir + tmpSubFileName:      tmpSubFile,
 		baseDir + tmpSubDeepIndexName: tmpSubDeepIndex,
 		baseDir + tmpSubDeepFileName:  tmpSubDeepFile,
+		baseDir + tmpNoIndexName:      tmpSubDeepFile,
 	}
 
 	serveFileFuncs = []FileServerFunc{
@@ -306,6 +309,56 @@ func TestIgnoreIndex(t *testing.T) {
 
 	for _, serveFile := range serveFileFuncs {
 		handler := IgnoreIndex(Basic(serveFile, baseDir))
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				fullpath := "http://localhost/" + tc.path
+				req := httptest.NewRequest("GET", fullpath, nil)
+				w := httptest.NewRecorder()
+
+				handler(w, req)
+
+				resp := w.Result()
+				body, err := ioutil.ReadAll(resp.Body)
+				if nil != err {
+					t.Errorf("While reading body got %v", err)
+				}
+				contents := string(body)
+				if tc.code != resp.StatusCode {
+					t.Errorf(
+						"While retrieving %s expected status code of %d but got %d",
+						fullpath, tc.code, resp.StatusCode,
+					)
+				}
+				if tc.contents != contents {
+					t.Errorf(
+						"While retrieving %s expected contents '%s' but got '%s'",
+						fullpath, tc.contents, contents,
+					)
+				}
+			})
+		}
+	}
+}
+
+func TestPreventListings(t *testing.T) {
+	testCases := []struct {
+		name     string
+		path     string
+		code     int
+		contents string
+	}{
+		{"Good base dir", "", ok, tmpIndex},
+		{"Good base index", tmpIndexName, redirect, nothing},
+		{"Good base file", tmpFileName, ok, tmpFile},
+		{"Bad base file", tmpBadName, missing, notFound},
+		{"Good subdir dir", subDir, ok, tmpSubIndex},
+		{"Good subdir index", tmpSubIndexName, redirect, nothing},
+		{"Good subdir file", tmpSubFileName, ok, tmpSubFile},
+		{"Dir without index", tmpNoIndexDir, missing, notFound},
+	}
+
+	for _, serveFile := range serveFileFuncs {
+		handler := PreventListings(Basic(serveFile, baseDir), baseDir, "")
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				fullpath := "http://localhost/" + tc.path
