@@ -1,2 +1,4 @@
 vendor/
 
+# Ignore the binary output directory (result of running update.sh).
+/out/
