@@ -27,7 +27,7 @@ CORS=false
 # printed to stdout while logs generated during execution are printed to stderr.
 DEBUG=false
 
-# Optional Hostname for binding. Leave black to accept any incoming HTTP request
+# Optional Hostname for binding. Leave unset to accept any incoming HTTP request
 # on the prescribed port.
 HOST=
 
