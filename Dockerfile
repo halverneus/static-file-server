@@ -3,7 +3,7 @@
 ################################################################################
 FROM golang:1.20.5 as builder
 
-ENV VERSION 1.8.8
+ENV VERSION 1.8.9
 ENV CGO_ENABLED 0
 ENV BUILD_DIR /build
 
@@ -37,5 +37,5 @@ LABEL life.apets.vendor="Halverneus" \
     life.apets.url="https://github.com/halverneus/static-file-server" \
     life.apets.name="Static File Server" \
     life.apets.description="A tiny static file server" \
-    life.apets.version="v1.8.8" \
+    life.apets.version="v1.8.9" \
     life.apets.schema-version="1.0"
